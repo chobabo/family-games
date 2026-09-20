@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08182f">
+  <meta name="description" content="우리 가족 캐릭터로 즐기는 합체 게임">
+  <title>우리 가족 합체 게임</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23ffcc42'/%3E%3Ccircle cx='23' cy='27' r='4' fill='%2308182f'/%3E%3Ccircle cx='41' cy='27' r='4' fill='%2308182f'/%3E%3Cpath d='M20 39q12 12 24 0' fill='none' stroke='%2308182f' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">CHO FAMILY GAME</p>
+        <h1>우리 가족 합체 게임</h1>
+      </div>
+      <div class="top-actions">
+        <button class="icon-button" id="soundButton" type="button" aria-label="소리 끄기" title="소리 켜기/끄기">♪</button>
+        <button class="ghost-button" id="newGameButton" type="button">새 게임</button>
+      </div>
+    </header>
+
+    <section class="score-strip" aria-label="게임 점수">
+      <div class="score-cell player-cell">
+        <span>플레이어</span>
+        <strong id="playerDisplay">-</strong>
+      </div>
+      <div class="score-cell">
+        <span>점수</span>
+        <strong id="scoreDisplay">0</strong>
+      </div>
+      <div class="score-cell">
+        <span>내 최고</span>
+        <strong id="bestDisplay">0</strong>
+      </div>
+    </section>
+
+    <div class="game-layout">
+      <section class="play-column" aria-label="게임 영역">
+        <div class="game-frame">
+          <canvas id="gameCanvas" width="430" height="650" aria-label="가족 캐릭터 합체 게임판"></canvas>
+          <div class="danger-label" aria-hidden="true">여기까지 쌓이면 끝!</div>
+          <div class="game-message" id="gameMessage" aria-live="polite"></div>
+        </div>
+        <p class="controls-hint"><strong>움직이기</strong> 마우스·손가락·← → &nbsp; <strong>놓기</strong> 클릭·탭·스페이스</p>
+      </section>
+
+      <aside class="side-panel">
+        <section class="card next-card">
+          <div>
+            <p class="section-label">다음 캐릭터</p>
+            <p class="small-copy">같은 얼굴끼리 만나면 합체해요.</p>
+          </div>
+          <div class="avatar son" id="nextAvatar" role="img" aria-label="다음 캐릭터"></div>
+        </section>
+
+        <section class="card">
+          <p class="section-label">합체 순서</p>
+          <div class="merge-path" aria-label="막내아들, 둘째딸, 첫째딸, 아내 순서">
+            <div class="stage"><div class="avatar son"></div><span>막내</span></div>
+            <span class="arrow">›</span>
+            <div class="stage"><div class="avatar second"></div><span>둘째</span></div>
+            <span class="arrow">›</span>
+            <div class="stage"><div class="avatar first"></div><span>첫째</span></div>
+            <span class="arrow">›</span>
+            <div class="stage"><div class="avatar wife"></div><span>엄마</span></div>
+          </div>
+        </section>
+
+        <section class="card leaderboard-card">
+          <div class="card-heading">
+            <p class="section-label">가족 최고 기록</p>
+            <button class="text-button" id="clearScoresButton" type="button">기록 지우기</button>
+          </div>
+          <ol class="leaderboard" id="leaderboard"></ol>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <div class="modal-backdrop visible" id="startModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="start-card">
+      <div class="family-mark" aria-hidden="true">
+        <span class="avatar wife"></span>
+        <span class="avatar first"></span>
+        <span class="avatar second"></span>
+        <span class="avatar son"></span>
+      </div>
+      <p class="eyebrow">FAMILY CHALLENGE</p>
+      <h2 id="modalTitle">누가 도전할까요?</h2>
+      <p>이름을 고르거나 직접 입력하면 최고 기록이 저장됩니다.</p>
+      <div class="quick-names" aria-label="빠른 이름 선택">
+        <button type="button" data-name="아빠">아빠</button>
+        <button type="button" data-name="엄마">엄마</button>
+        <button type="button" data-name="첫째">첫째</button>
+        <button type="button" data-name="둘째">둘째</button>
+        <button type="button" data-name="막내">막내</button>
+      </div>
+      <label class="name-field">
+        <span>플레이어 이름</span>
+        <input id="playerNameInput" type="text" maxlength="12" autocomplete="off" placeholder="이름을 입력하세요">
+      </label>
+      <button class="primary-button" id="startButton" type="button">게임 시작</button>
+      <p class="privacy-note">기록은 이 기기의 브라우저에만 저장됩니다.</p>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
+    <div class="start-card compact">
+      <div class="celebration" aria-hidden="true">★</div>
+      <p class="eyebrow">GAME OVER</p>
+      <h2 id="gameOverTitle">멋진 도전이었어요!</h2>
+      <p><strong id="finalPlayer">플레이어</strong>의 점수</p>
+      <div class="final-score" id="finalScore">0</div>
+      <p class="record-message" id="recordMessage"></p>
+      <button class="primary-button" id="retryButton" type="button">한 번 더</button>
+      <button class="ghost-button full" id="changePlayerButton" type="button">다른 가족 도전</button>
+    </div>
+  </div>
+
+  <script src="./game.js"></script>
+</body>
+</html>

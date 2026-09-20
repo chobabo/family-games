@@ -1,0 +1,594 @@
+(() => {
+  'use strict';
+
+  const W = 430;
+  const H = 650;
+  const DANGER_Y = 102;
+  const STORAGE_KEY = 'cho-family-merge-scores-v1';
+  const LAST_PLAYER_KEY = 'cho-family-merge-last-player';
+  const TYPES = [
+    { name: '막내', radius: 29, color: '#76d94d', cropX: 1, cropY: 1, points: 2, css: 'son' },
+    { name: '둘째', radius: 43, color: '#ff69aa', cropX: 0, cropY: 1, points: 8, css: 'second' },
+    { name: '첫째', radius: 60, color: '#48a9ff', cropX: 1, cropY: 0, points: 24, css: 'first' },
+    { name: '엄마', radius: 82, color: '#ffbf32', cropX: 0, cropY: 0, points: 72, css: 'wife' }
+  ];
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const familyImage = new Image();
+  familyImage.src = './assets/family-characters.png';
+
+  const els = {
+    player: document.getElementById('playerDisplay'),
+    score: document.getElementById('scoreDisplay'),
+    best: document.getElementById('bestDisplay'),
+    leaderboard: document.getElementById('leaderboard'),
+    next: document.getElementById('nextAvatar'),
+    startModal: document.getElementById('startModal'),
+    gameOverModal: document.getElementById('gameOverModal'),
+    playerInput: document.getElementById('playerNameInput'),
+    startButton: document.getElementById('startButton'),
+    newGameButton: document.getElementById('newGameButton'),
+    retryButton: document.getElementById('retryButton'),
+    changePlayerButton: document.getElementById('changePlayerButton'),
+    clearScoresButton: document.getElementById('clearScoresButton'),
+    soundButton: document.getElementById('soundButton'),
+    finalPlayer: document.getElementById('finalPlayer'),
+    finalScore: document.getElementById('finalScore'),
+    recordMessage: document.getElementById('recordMessage'),
+    gameMessage: document.getElementById('gameMessage')
+  };
+
+  let pieces = [];
+  let particles = [];
+  let playerName = '';
+  let score = 0;
+  let nextType = 0;
+  let dropX = W / 2;
+  let canDrop = false;
+  let running = false;
+  let gameOver = false;
+  let dangerTime = 0;
+  let lastTime = performance.now();
+  let messageTimer = 0;
+  let soundOn = true;
+  let audioContext = null;
+
+  function loadScores() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(data) ? data.filter(x => x && typeof x.name === 'string' && Number.isFinite(x.score)) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveScore(name, value) {
+    if (!name || value <= 0) return false;
+    const scores = loadScores();
+    const oldBest = scores.filter(x => x.name === name).reduce((m, x) => Math.max(m, x.score), 0);
+    scores.push({ name, score: value, date: Date.now() });
+    scores.sort((a, b) => b.score - a.score || a.date - b.date);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores.slice(0, 30)));
+    renderLeaderboard();
+    return value > oldBest;
+  }
+
+  function personalBest(name) {
+    return loadScores().filter(x => x.name === name).reduce((m, x) => Math.max(m, x.score), 0);
+  }
+
+  function renderLeaderboard() {
+    const bestByName = new Map();
+    for (const item of loadScores()) {
+      bestByName.set(item.name, Math.max(bestByName.get(item.name) || 0, item.score));
+    }
+    const rows = [...bestByName.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    els.leaderboard.replaceChildren();
+    if (!rows.length) {
+      const li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = '첫 기록을 기다리고 있어요!';
+      els.leaderboard.append(li);
+      return;
+    }
+    rows.forEach(([name, points]) => {
+      const li = document.createElement('li');
+      const nameSpan = document.createElement('span');
+      const pointSpan = document.createElement('span');
+      nameSpan.className = 'name';
+      pointSpan.className = 'points';
+      nameSpan.textContent = name;
+      pointSpan.textContent = points.toLocaleString();
+      li.append(nameSpan, pointSpan);
+      els.leaderboard.append(li);
+    });
+  }
+
+  function setCanvasResolution() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function randomNext() {
+    return Math.random() < 0.78 ? 0 : 1;
+  }
+
+  function updateNextAvatar() {
+    els.next.className = `avatar ${TYPES[nextType].css}`;
+    els.next.setAttribute('aria-label', `다음 캐릭터: ${TYPES[nextType].name}`);
+  }
+
+  function resetGame() {
+    pieces = [];
+    particles = [];
+    score = 0;
+    dangerTime = 0;
+    gameOver = false;
+    running = true;
+    canDrop = true;
+    dropX = W / 2;
+    nextType = randomNext();
+    els.score.textContent = '0';
+    els.best.textContent = personalBest(playerName).toLocaleString();
+    updateNextAvatar();
+  }
+
+  function beginFor(name) {
+    playerName = name.trim().slice(0, 12) || '가족';
+    localStorage.setItem(LAST_PLAYER_KEY, playerName);
+    els.player.textContent = playerName;
+    els.startModal.classList.remove('visible');
+    els.gameOverModal.classList.remove('visible');
+    resetGame();
+    unlockAudio();
+  }
+
+  function dropPiece() {
+    if (!running || gameOver || !canDrop) return;
+    const type = nextType;
+    const r = TYPES[type].radius;
+    pieces.push({
+      x: Math.max(r + 5, Math.min(W - r - 5, dropX)),
+      y: 52,
+      vx: 0,
+      vy: 0,
+      r,
+      type,
+      age: 0,
+      pulse: 1
+    });
+    canDrop = false;
+    nextType = randomNext();
+    updateNextAvatar();
+    tone(230, .035, .045);
+    window.setTimeout(() => { if (!gameOver) canDrop = true; }, 560);
+  }
+
+  function update(dt) {
+    if (!running || gameOver) return;
+    const steps = 3;
+    const step = dt / steps;
+    for (let s = 0; s < steps; s++) {
+      for (const p of pieces) {
+        p.age += step;
+        p.pulse = Math.max(0, p.pulse - step * 3.5);
+        p.vy += 1000 * step;
+        p.vx *= Math.pow(.996, step * 60);
+        p.vy *= Math.pow(.999, step * 60);
+        p.x += p.vx * step;
+        p.y += p.vy * step;
+
+        if (p.x - p.r < 5) {
+          p.x = p.r + 5;
+          if (p.vx < 0) p.vx *= -.24;
+        } else if (p.x + p.r > W - 5) {
+          p.x = W - p.r - 5;
+          if (p.vx > 0) p.vx *= -.24;
+        }
+        if (p.y + p.r > H - 7) {
+          p.y = H - p.r - 7;
+          if (p.vy > 0) p.vy *= -.18;
+          p.vx *= .975;
+        }
+      }
+
+      for (let iter = 0; iter < 3; iter++) {
+        for (let i = 0; i < pieces.length; i++) {
+          for (let j = i + 1; j < pieces.length; j++) {
+            resolveCollision(pieces[i], pieces[j]);
+          }
+        }
+      }
+      mergeTouching();
+    }
+
+    for (const part of particles) {
+      part.life -= dt;
+      part.x += part.vx * dt;
+      part.y += part.vy * dt;
+      part.vy += 260 * dt;
+    }
+    particles = particles.filter(p => p.life > 0);
+
+    const danger = pieces.some(p => p.age > 1.7 && p.y - p.r < DANGER_Y && Math.hypot(p.vx, p.vy) < 90);
+    dangerTime = danger ? dangerTime + dt : Math.max(0, dangerTime - dt * 2.2);
+    if (dangerTime > 1.7) finishGame();
+  }
+
+  function resolveCollision(a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const minDist = a.r + b.r;
+    const distSq = dx * dx + dy * dy;
+    if (distSq <= 0 || distSq >= minDist * minDist) return;
+    const dist = Math.sqrt(distSq);
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const overlap = minDist - dist;
+    const massA = a.r * a.r;
+    const massB = b.r * b.r;
+    const total = massA + massB;
+    a.x -= nx * overlap * (massB / total) * .52;
+    a.y -= ny * overlap * (massB / total) * .52;
+    b.x += nx * overlap * (massA / total) * .52;
+    b.y += ny * overlap * (massA / total) * .52;
+
+    const rvx = b.vx - a.vx;
+    const rvy = b.vy - a.vy;
+    const along = rvx * nx + rvy * ny;
+    if (along >= 0) return;
+    const impulse = -(1.12 * along) / (1 / massA + 1 / massB);
+    a.vx -= impulse * nx / massA;
+    a.vy -= impulse * ny / massA;
+    b.vx += impulse * nx / massB;
+    b.vy += impulse * ny / massB;
+  }
+
+  function mergeTouching() {
+    const used = new Set();
+    const additions = [];
+    for (let i = 0; i < pieces.length; i++) {
+      if (used.has(i)) continue;
+      for (let j = i + 1; j < pieces.length; j++) {
+        if (used.has(j)) continue;
+        const a = pieces[i];
+        const b = pieces[j];
+        if (a.type !== b.type || a.type >= TYPES.length - 1 || a.age < .12 || b.age < .12) continue;
+        const dist = Math.hypot(b.x - a.x, b.y - a.y);
+        if (dist > a.r + b.r + 1) continue;
+        used.add(i);
+        used.add(j);
+        const newType = a.type + 1;
+        const x = (a.x + b.x) / 2;
+        const y = (a.y + b.y) / 2;
+        additions.push({
+          x, y,
+          vx: (a.vx + b.vx) * .24,
+          vy: Math.min(-55, (a.vy + b.vy) * .15 - 45),
+          r: TYPES[newType].radius,
+          type: newType,
+          age: 0,
+          pulse: 1
+        });
+        score += TYPES[newType].points;
+        els.score.textContent = score.toLocaleString();
+        els.best.textContent = Math.max(score, personalBest(playerName)).toLocaleString();
+        burst(x, y, TYPES[newType].color);
+        tone(320 + newType * 120, .09, .08);
+        showMessage(`${TYPES[newType].name} 합체! +${TYPES[newType].points}`);
+        break;
+      }
+    }
+    if (used.size) pieces = pieces.filter((_, i) => !used.has(i)).concat(additions);
+  }
+
+  function burst(x, y, color) {
+    for (let i = 0; i < 12; i++) {
+      const angle = Math.PI * 2 * i / 12 + Math.random() * .25;
+      const speed = 65 + Math.random() * 95;
+      particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 45, life: .65 + Math.random() * .25, color });
+    }
+  }
+
+  function showMessage(text) {
+    els.gameMessage.textContent = text;
+    els.gameMessage.classList.add('show');
+    clearTimeout(messageTimer);
+    messageTimer = setTimeout(() => els.gameMessage.classList.remove('show'), 680);
+  }
+
+  function finishGame() {
+    if (gameOver) return;
+    gameOver = true;
+    running = false;
+    const isRecord = saveScore(playerName, score);
+    els.finalPlayer.textContent = playerName;
+    els.finalScore.textContent = score.toLocaleString();
+    els.recordMessage.textContent = isRecord ? '새로운 개인 최고 기록이에요! ★' : `개인 최고 ${personalBest(playerName).toLocaleString()}점`;
+    els.best.textContent = personalBest(playerName).toLocaleString();
+    els.gameOverModal.classList.add('visible');
+    tone(180, .18, .09);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawBackdrop();
+    if (running && !gameOver) drawDropGuide();
+    for (const p of pieces) drawPiece(p);
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life / .8);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawBackdrop() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#173e6a');
+    grad.addColorStop(.55, '#0e2a4c');
+    grad.addColorStop(1, '#091d37');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = 'rgba(255,255,255,.025)';
+    for (let y = 20; y < H; y += 42) {
+      for (let x = (y / 42 % 2) * 21; x < W; x += 42) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.save();
+    ctx.setLineDash([8, 8]);
+    ctx.strokeStyle = dangerTime > 0 ? `rgba(255, 106, 138, ${.35 + Math.min(.5, dangerTime / 2)})` : 'rgba(255, 126, 154, .28)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(10, DANGER_Y);
+    ctx.lineTo(W - 10, DANGER_Y);
+    ctx.stroke();
+    ctx.restore();
+
+    const floorGrad = ctx.createLinearGradient(0, H - 28, 0, H);
+    floorGrad.addColorStop(0, 'rgba(79, 170, 255, 0)');
+    floorGrad.addColorStop(1, 'rgba(79, 170, 255, .14)');
+    ctx.fillStyle = floorGrad;
+    ctx.fillRect(0, H - 34, W, 34);
+  }
+
+  function drawDropGuide() {
+    const type = TYPES[nextType];
+    const x = Math.max(type.radius + 5, Math.min(W - type.radius - 5, dropX));
+    ctx.save();
+    ctx.setLineDash([5, 8]);
+    ctx.strokeStyle = 'rgba(255,255,255,.20)';
+    ctx.beginPath();
+    ctx.moveTo(x, 62);
+    ctx.lineTo(x, H - 12);
+    ctx.stroke();
+    ctx.globalAlpha = canDrop ? .72 : .28;
+    drawCharacterCircle(x, 48, type.radius, nextType, 0);
+    ctx.restore();
+  }
+
+  function drawPiece(p) {
+    drawCharacterCircle(p.x, p.y, p.r, p.type, p.pulse);
+  }
+
+  function drawCharacterCircle(x, y, r, typeIndex, pulse) {
+    const type = TYPES[typeIndex];
+    const scale = 1 + pulse * .07;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    ctx.shadowColor = 'rgba(0,0,0,.38)';
+    ctx.shadowBlur = Math.max(8, r * .22);
+    ctx.shadowOffsetY = Math.max(4, r * .10);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = type.color;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, r - 2, 0, Math.PI * 2);
+    ctx.clip();
+    if (familyImage.complete && familyImage.naturalWidth) {
+      const halfW = familyImage.naturalWidth / 2;
+      const halfH = familyImage.naturalHeight / 2;
+      ctx.drawImage(familyImage, type.cropX * halfW, type.cropY * halfH, halfW, halfH, -r, -r, r * 2, r * 2);
+    } else {
+      ctx.fillStyle = type.color;
+      ctx.fillRect(-r, -r, r * 2, r * 2);
+      ctx.fillStyle = '#10203a';
+      ctx.font = `900 ${Math.max(14, r * .55)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(type.name[0], 0, 1);
+    }
+    ctx.restore();
+
+    ctx.lineWidth = Math.max(2.5, r * .065);
+    ctx.strokeStyle = type.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, r - 1.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = 'rgba(255,255,255,.52)';
+    ctx.beginPath();
+    ctx.arc(0, 0, r - 5, Math.PI * 1.05, Math.PI * 1.78);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function loop(now) {
+    const dt = Math.min(.028, Math.max(.001, (now - lastTime) / 1000));
+    lastTime = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function pointerX(event) {
+    const rect = canvas.getBoundingClientRect();
+    return (event.clientX - rect.left) * W / rect.width;
+  }
+
+  function unlockAudio() {
+    if (!audioContext) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) audioContext = new AudioCtx();
+    }
+    if (audioContext?.state === 'suspended') audioContext.resume();
+  }
+
+  function tone(frequency, duration, volume) {
+    if (!soundOn) return;
+    unlockAudio();
+    if (!audioContext) return;
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(frequency * 1.12, audioContext.currentTime + duration);
+    gain.gain.setValueAtTime(volume, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + duration);
+    osc.connect(gain).connect(audioContext.destination);
+    osc.start();
+    osc.stop(audioContext.currentTime + duration);
+  }
+
+  function registerWebMcp() {
+    const context = document.modelContext;
+    if (!context?.registerTool) return;
+    const lifecycle = new AbortController();
+    const register = tool => {
+      try {
+        void Promise.resolve(context.registerTool(tool, { signal: lifecycle.signal })).catch(() => {});
+      } catch {}
+    };
+    register({
+      name: 'start_family_game',
+      title: '가족 게임 시작',
+      description: '지정한 플레이어 이름으로 새 가족 합체 게임을 시작합니다.',
+      inputSchema: {
+        type: 'object',
+        properties: { playerName: { type: 'string', minLength: 1, maxLength: 12 } },
+        required: ['playerName'],
+        additionalProperties: false
+      },
+      annotations: { readOnlyHint: false, untrustedContentHint: true },
+      execute(input) {
+        const name = typeof input?.playerName === 'string' ? input.playerName.trim() : '';
+        if (!name || name.length > 12) throw new Error('플레이어 이름은 1~12자로 입력해 주세요.');
+        beginFor(name);
+        return { status: 'started', playerName };
+      }
+    });
+    register({
+      name: 'read_family_high_scores',
+      title: '가족 최고 기록 확인',
+      description: '이 기기에 저장된 가족별 최고 점수를 확인합니다.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
+      execute() {
+        const bestByName = new Map();
+        for (const item of loadScores()) bestByName.set(item.name, Math.max(bestByName.get(item.name) || 0, item.score));
+        return {
+          scores: [...bestByName.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([name, points]) => ({ name, points }))
+        };
+      }
+    });
+  }
+
+  canvas.addEventListener('pointermove', event => {
+    if (!running || gameOver) return;
+    dropX = pointerX(event);
+  });
+  canvas.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    if (!running || gameOver) return;
+    dropX = pointerX(event);
+    dropPiece();
+  });
+  window.addEventListener('keydown', event => {
+    if (!running || gameOver || els.startModal.classList.contains('visible')) return;
+    if (event.key === 'ArrowLeft') { event.preventDefault(); dropX = Math.max(15, dropX - 18); }
+    if (event.key === 'ArrowRight') { event.preventDefault(); dropX = Math.min(W - 15, dropX + 18); }
+    if (event.code === 'Space' || event.key === 'Enter') { event.preventDefault(); dropPiece(); }
+  });
+
+  document.querySelectorAll('[data-name]').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('[data-name]').forEach(b => b.classList.remove('selected'));
+      button.classList.add('selected');
+      els.playerInput.value = button.dataset.name;
+    });
+  });
+
+  els.playerInput.addEventListener('input', () => {
+    document.querySelectorAll('[data-name]').forEach(b => b.classList.toggle('selected', b.dataset.name === els.playerInput.value.trim()));
+  });
+  els.playerInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') els.startButton.click();
+  });
+  els.startButton.addEventListener('click', () => {
+    const name = els.playerInput.value.trim();
+    if (!name) {
+      els.playerInput.focus();
+      els.playerInput.setAttribute('placeholder', '먼저 이름을 입력해 주세요');
+      return;
+    }
+    beginFor(name);
+  });
+  els.retryButton.addEventListener('click', () => {
+    els.gameOverModal.classList.remove('visible');
+    resetGame();
+  });
+  els.changePlayerButton.addEventListener('click', () => {
+    els.gameOverModal.classList.remove('visible');
+    els.startModal.classList.add('visible');
+    els.playerInput.focus();
+  });
+  els.newGameButton.addEventListener('click', () => {
+    if (running && score > 0) saveScore(playerName, score);
+    running = false;
+    gameOver = false;
+    els.gameOverModal.classList.remove('visible');
+    els.startModal.classList.add('visible');
+    els.playerInput.value = playerName || localStorage.getItem(LAST_PLAYER_KEY) || '';
+  });
+  els.clearScoresButton.addEventListener('click', () => {
+    if (confirm('이 기기에 저장된 가족 기록을 모두 지울까요?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      renderLeaderboard();
+      els.best.textContent = '0';
+    }
+  });
+  els.soundButton.addEventListener('click', () => {
+    soundOn = !soundOn;
+    els.soundButton.textContent = soundOn ? '♪' : '×';
+    els.soundButton.setAttribute('aria-label', soundOn ? '소리 끄기' : '소리 켜기');
+    if (soundOn) tone(420, .06, .05);
+  });
+
+  window.addEventListener('resize', setCanvasResolution);
+  familyImage.addEventListener('load', draw);
+  els.playerInput.value = localStorage.getItem(LAST_PLAYER_KEY) || '';
+  renderLeaderboard();
+  setCanvasResolution();
+  updateNextAvatar();
+  registerWebMcp();
+  requestAnimationFrame(loop);
+})();
