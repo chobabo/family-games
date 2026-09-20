@@ -19,7 +19,19 @@
 
   const STAGE_FINISH = {
     1: { easy: 3400, normal: 4100, challenge: 4800 },
-    2: { easy: 5000, normal: 6200, challenge: 7400 }
+    2: { easy: 4300, normal: 5200, challenge: 6100 },
+    3: { easy: 4700, normal: 5700, challenge: 6700 },
+    4: { easy: 5200, normal: 6300, challenge: 7400 },
+    5: { easy: 6200, normal: 7400, challenge: 8600 }
+  };
+
+  const STAGE_SPEED = { 1: 1, 2: 1, 3: 1.04, 4: 1.1, 5: 1.14 };
+  const STAGE_NAMES = {
+    1: 'トゲコース',
+    2: 'ブロックコース',
+    3: 'テクニカルコース',
+    4: 'スピードコース',
+    5: 'ボスステージ'
   };
 
   const CHARACTERS = {
@@ -81,6 +93,7 @@
   let attempt = 1;
   let elapsedMs = 0;
   let attemptStartedAt = 0;
+  let runStartedAt = 0;
   let running = false;
   let crashed = false;
   let cleared = false;
@@ -103,7 +116,7 @@
 
   function overallProgress() {
     const stageProgress = Math.min(1, distance / currentFinish());
-    return stage === 1 ? Math.floor(stageProgress * 50) : 50 + Math.floor(stageProgress * 50);
+    return Math.min(100, (stage - 1) * 20 + Math.floor(stageProgress * 20));
   }
 
   function formatTime(ms) {
@@ -176,6 +189,18 @@
     if (name === 'steps') { addBlock(x, 72, 56); addBlock(x + 106, 72, 92); }
     if (name === 'pad-wall') { addPad(x); addBlock(x + 180, 82, 150); }
     if (name === 'gate') { addSpike(x); addBlock(x + 108, 70, 76); addSpike(x + 212); }
+    if (name === 'boss-rise') {
+      addPad(x); addBlock(x + 190, 160, 150); addSpike(x + 390); addSpike(x + 434);
+    }
+    if (name === 'boss-stairs') {
+      addBlock(x, 72, 54); addBlock(x + 106, 72, 90); addSpike(x + 220); addSpike(x + 264);
+    }
+    if (name === 'boss-gate') {
+      addSpike(x); addBlock(x + 106, 74, 90); addSpike(x + 220); addBlock(x + 330, 78, 120);
+    }
+    if (name === 'boss-final') {
+      addPad(x); addBlock(x + 190, 165, 145); addSpike(x + 395); addSpike(x + 439); addSpike(x + 483);
+    }
   }
 
   function buildLevel() {
@@ -185,15 +210,42 @@
       normal: ['spike', 'double', 'spike', 'double', 'triple'],
       challenge: ['double', 'spike', 'triple', 'double', 'triple']
     };
-    const advancedSequences = {
+    const blockSequences = {
       easy: ['block', 'spike', 'pad-wall', 'block-spike', 'steps'],
       normal: ['block-spike', 'pad-wall', 'tall', 'gate', 'steps', 'pad-wall'],
       challenge: ['pad-wall', 'block-spike', 'gate', 'steps', 'tall', 'pad-wall', 'gate']
     };
-    const stageGaps = stage === 1
-      ? { easy: 480, normal: 420, challenge: 365 }
-      : { easy: 445, normal: 380, challenge: 325 };
-    const sequence = (stage === 1 ? spikeSequences : advancedSequences)[difficultyKey];
+    const technicalSequences = {
+      easy: ['steps', 'block-spike', 'pad-wall', 'gate'],
+      normal: ['steps', 'gate', 'pad-wall', 'block-spike', 'triple'],
+      challenge: ['gate', 'steps', 'block-spike', 'pad-wall', 'triple', 'tall']
+    };
+    const speedSequences = {
+      easy: ['double', 'block-spike', 'steps', 'pad-wall', 'gate'],
+      normal: ['triple', 'gate', 'steps', 'pad-wall', 'block-spike', 'tall'],
+      challenge: ['gate', 'triple', 'pad-wall', 'block-spike', 'steps', 'gate', 'tall']
+    };
+    const bossSequences = {
+      easy: ['boss-stairs', 'boss-rise', 'boss-gate', 'boss-final'],
+      normal: ['boss-rise', 'boss-gate', 'boss-stairs', 'boss-final'],
+      challenge: ['boss-gate', 'boss-rise', 'boss-final', 'boss-stairs', 'boss-final']
+    };
+    const sequences = {
+      1: spikeSequences,
+      2: blockSequences,
+      3: technicalSequences,
+      4: speedSequences,
+      5: bossSequences
+    };
+    const gapByStage = {
+      1: { easy: 480, normal: 420, challenge: 365 },
+      2: { easy: 445, normal: 380, challenge: 325 },
+      3: { easy: 430, normal: 365, challenge: 315 },
+      4: { easy: 390, normal: 330, challenge: 285 },
+      5: { easy: 690, normal: 620, challenge: 570 }
+    };
+    const stageGaps = gapByStage[stage];
+    const sequence = sequences[stage][difficultyKey];
     let x = 720;
     let index = 0;
     while (x < currentFinish() - 650) {
@@ -248,6 +300,7 @@
     els.resultModal.classList.remove('visible');
     stage = 1;
     attempt = 1;
+    runStartedAt = performance.now();
     buildLevel();
     beginAttempt(false);
     unlockAudio();
@@ -257,8 +310,9 @@
     clearTimeout(restartTimer);
     if (increment) attempt += 1;
     distance = 0;
-    elapsedMs = 0;
     attemptStartedAt = performance.now();
+    if (!runStartedAt) runStartedAt = attemptStartedAt;
+    elapsedMs = attemptStartedAt - runStartedAt;
     player.y = GROUND_Y - PLAYER_SIZE;
     player.vy = 0;
     rotation = 0;
@@ -272,12 +326,10 @@
     beatTimer = 0;
     beatIndex = 0;
     els.attempt.textContent = `${attempt}回`;
-    els.stage.textContent = `${stage} / 2`;
+    els.stage.textContent = `${stage} / 5`;
     els.progress.textContent = '0%';
-    els.time.textContent = formatTime(0);
-    els.overlay.textContent = attempt === 1
-      ? (stage === 1 ? 'ステージ1　トゲをジャンプ！' : 'ステージ2　ブロックコース！')
-      : '';
+    els.time.textContent = formatTime(elapsedMs);
+    els.overlay.textContent = attempt === 1 ? `ステージ${stage}　${STAGE_NAMES[stage]}` : '';
     els.overlay.className = attempt === 1 ? 'dash-overlay show' : 'dash-overlay';
     window.setTimeout(() => {
       if (running) els.overlay.classList.remove('show');
@@ -367,26 +419,26 @@
     running = false;
     cleared = true;
     distance = currentFinish();
-    elapsedMs = performance.now() - attemptStartedAt;
-    const firstStage = stage === 1;
-    const records = saveRecord(firstStage ? 50 : 100, firstStage ? null : elapsedMs);
+    elapsedMs = performance.now() - runStartedAt;
+    const finalStage = stage === 5;
+    const records = saveRecord(stage * 20, finalStage ? elapsedMs : null);
     els.progress.textContent = '100%';
-    els.overlay.textContent = firstStage ? 'ステージ1 クリア！' : '全ステージ クリア！';
+    els.overlay.textContent = finalStage ? 'ボス撃破！' : `ステージ${stage} クリア！`;
     els.overlay.className = 'dash-overlay show clear';
     tone(660, .10, .06);
     window.setTimeout(() => tone(880, .18, .06), 120);
     resultTimer = window.setTimeout(() => {
       els.finalPlayer.textContent = playerName;
-      els.finalProgress.textContent = firstStage ? 'ステージ1 クリア' : '100%';
-      els.finalTime.textContent = `クリアタイム ${formatTime(elapsedMs)}・${attempt}回目`;
+      els.finalProgress.textContent = finalStage ? '100%' : `ステージ${stage} クリア`;
+      els.finalTime.textContent = `通算タイム ${formatTime(elapsedMs)}・このステージ ${attempt}回目`;
       els.resultDifficulty.textContent = `難易度：${currentDifficulty().label}・ステージ${stage}`;
-      els.resultIcon.textContent = firstStage ? '⭐' : '🏁';
-      els.resultEyebrow.textContent = firstStage ? '次のステージへ' : '全ステージクリア';
-      els.resultTitle.textContent = firstStage ? 'ステージ1 クリア！' : 'ゴール！';
-      els.recordMessage.textContent = firstStage
-        ? '次は青いブロックと黄色いジャンプ台が登場します！'
-        : (records.timeRecord ? '最速クリア記録を更新しました！' : '全ステージクリア、おめでとう！');
-      els.retryButton.textContent = firstStage ? 'ステージ2へ' : 'ステージ1からもう一度';
+      els.resultIcon.textContent = finalStage ? '👑' : '⭐';
+      els.resultEyebrow.textContent = finalStage ? 'ボスステージクリア' : '次のステージへ';
+      els.resultTitle.textContent = finalStage ? '全ステージクリア！' : `ステージ${stage} クリア！`;
+      els.recordMessage.textContent = finalStage
+        ? (records.timeRecord ? '最速クリア記録を更新しました！' : 'ボス撃破、おめでとう！')
+        : `次はステージ${stage + 1}「${STAGE_NAMES[stage + 1]}」です！`;
+      els.retryButton.textContent = finalStage ? 'ステージ1からもう一度' : `ステージ${stage + 1}へ`;
       els.resultModal.classList.add('visible');
     }, 500);
   }
@@ -399,8 +451,8 @@
     const difficulty = currentDifficulty();
     const previousY = player.y;
     const previousBottom = previousY + PLAYER_SIZE;
-    elapsedMs = performance.now() - attemptStartedAt;
-    distance += difficulty.speed * dt;
+    elapsedMs = performance.now() - runStartedAt;
+    distance += difficulty.speed * STAGE_SPEED[stage] * dt;
     player.vy += difficulty.gravity * dt;
     player.y += player.vy * dt;
     onGround = false;
@@ -502,9 +554,9 @@
 
   function drawBackground() {
     const gradient = ctx.createLinearGradient(0, 0, 0, H);
-    gradient.addColorStop(0, '#0b1237');
-    gradient.addColorStop(.65, '#14265a');
-    gradient.addColorStop(1, '#0a1738');
+    gradient.addColorStop(0, stage === 5 ? '#2b0827' : '#0b1237');
+    gradient.addColorStop(.65, stage === 5 ? '#4a123b' : '#14265a');
+    gradient.addColorStop(1, stage === 5 ? '#19071e' : '#0a1738');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, W, H);
 
@@ -533,6 +585,12 @@
     ctx.font = '800 14px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(`${Math.floor(progress * 100)}%`, W - 24, 52);
+    if (stage === 5) {
+      ctx.fillStyle = '#ffcc42';
+      ctx.font = '900 22px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('BOSS STAGE', 24, 64);
+    }
 
     ctx.fillStyle = '#0a1230';
     ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
@@ -672,7 +730,12 @@
   els.startButton.addEventListener('click', startGame);
   els.retryButton.addEventListener('click', () => {
     els.resultModal.classList.remove('visible');
-    stage = stage === 1 && cleared ? 2 : 1;
+    if (stage < 5 && cleared) {
+      stage += 1;
+    } else {
+      stage = 1;
+      runStartedAt = performance.now();
+    }
     attempt = 1;
     buildLevel();
     beginAttempt(false);
@@ -680,6 +743,7 @@
   els.changePlayerButton.addEventListener('click', () => {
     els.resultModal.classList.remove('visible');
     stage = 1;
+    runStartedAt = 0;
     els.startModal.classList.add('visible');
   });
   els.newGameButton.addEventListener('click', () => {
@@ -692,6 +756,7 @@
     clearTimeout(restartTimer);
     clearTimeout(resultTimer);
     stage = 1;
+    runStartedAt = 0;
     els.resultModal.classList.remove('visible');
     els.startModal.classList.add('visible');
   });
@@ -726,6 +791,8 @@
     open() {
       running = false;
       crashed = false;
+      stage = 1;
+      runStartedAt = 0;
       clearTimeout(restartTimer);
       clearTimeout(resultTimer);
       els.resultModal.classList.remove('visible');
@@ -742,6 +809,7 @@
       running = false;
       crashed = false;
       stage = 1;
+      runStartedAt = 0;
       clearTimeout(restartTimer);
       clearTimeout(resultTimer);
       els.startModal.classList.remove('visible');
