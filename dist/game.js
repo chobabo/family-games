@@ -2,27 +2,27 @@
   'use strict';
 
   const W = 430;
-  const H = 520;
-  const DANGER_Y = 86;
+  const H = 572;
+  const DANGER_Y = 70;
   const STORAGE_KEY = 'cho-family-merge-scores-v1';
   const LAST_PLAYER_KEY = 'cho-family-merge-last-player';
   const LAST_DIFFICULTY_KEY = 'cho-family-merge-last-difficulty';
   const DIFFICULTIES = {
-    easy: { label: '쉬움', spawnWeights: [.28, .35, .25, .12], sizeScale: .92, grace: 3, showGuide: true, previewCount: 2, scoreMultiplier: .8 },
-    normal: { label: '보통', spawnWeights: [.48, .32, .16, .04], sizeScale: 1, grace: 1.7, showGuide: true, previewCount: 1, scoreMultiplier: 1 },
-    challenge: { label: '도전', spawnWeights: [.74, .22, .04], sizeScale: 1.06, grace: 1, showGuide: false, previewCount: 0, scoreMultiplier: 1.5 }
+    easy: { label: 'かんたん', spawnWeights: [.28, .35, .25, .12], sizeScale: .92, grace: 3, showGuide: true, previewCount: 2, scoreMultiplier: .8 },
+    normal: { label: 'ふつう', spawnWeights: [.48, .32, .16, .04], sizeScale: 1, grace: 1.7, showGuide: true, previewCount: 1, scoreMultiplier: 1 },
+    challenge: { label: 'チャレンジ', spawnWeights: [.74, .22, .04], sizeScale: 1.06, grace: 1, showGuide: false, previewCount: 0, scoreMultiplier: 1.5 }
   };
   const TYPES = [
-    { name: '막내', radius: 25, color: '#76d94d', image: 'family', crop: [627, 627, 627, 627], points: 2, css: 'son' },
-    { name: '둘째', radius: 34, color: '#ff69aa', image: 'family', crop: [0, 627, 627, 627], points: 6, css: 'second' },
-    { name: '첫째', radius: 45, color: '#48a9ff', image: 'family', crop: [627, 0, 627, 627], points: 16, css: 'first' },
-    { name: '엄마', radius: 57, color: '#ffbf32', image: 'family', crop: [0, 0, 627, 627], points: 40, css: 'wife' },
-    { name: '아빠', radius: 70, color: '#168cff', image: 'dad', crop: [0, 0, 1254, 1254], points: 100, css: 'dad' },
-    { name: '할머니', radius: 86, color: '#b255e7', image: 'grandparents', crop: [627, 215, 627, 627], points: 240, css: 'grandma' },
-    { name: '할아버지', radius: 104, color: '#f2a21a', image: 'grandparents', crop: [0, 215, 627, 627], points: 600, css: 'grandpa' },
-    { name: '엔더 드래곤', radius: 118, color: '#9f55ff', image: 'enderDragon', crop: [0, 0, 1254, 1254], points: 1400, css: 'ender-dragon' },
-    { name: '커비', radius: 134, color: '#ff72b4', image: 'kirby', crop: [0, 0, 1254, 1254], points: 3200, css: 'kirby' },
-    { name: '메타그로스', radius: 152, color: '#5f8fca', image: 'metagross', crop: [0, 0, 475, 475], points: 7000, css: 'metagross' }
+    { name: '末っ子', radius: 25, color: '#76d94d', image: 'family', crop: [627, 627, 627, 627], points: 2, css: 'son' },
+    { name: '次女', radius: 34, color: '#ff69aa', image: 'family', crop: [0, 627, 627, 627], points: 6, css: 'second' },
+    { name: '長女', radius: 45, color: '#48a9ff', image: 'family', crop: [627, 0, 627, 627], points: 16, css: 'first' },
+    { name: 'お母さん', radius: 57, color: '#ffbf32', image: 'family', crop: [0, 0, 627, 627], points: 40, css: 'wife' },
+    { name: 'お父さん', radius: 70, color: '#168cff', image: 'dad', crop: [0, 0, 1254, 1254], points: 100, css: 'dad' },
+    { name: 'おばあちゃん', radius: 86, color: '#b255e7', image: 'grandparents', crop: [627, 215, 627, 627], points: 240, css: 'grandma' },
+    { name: 'おじいちゃん', radius: 104, color: '#f2a21a', image: 'grandparents', crop: [0, 215, 627, 627], points: 600, css: 'grandpa' },
+    { name: 'エンダードラゴン', radius: 118, color: '#9f55ff', image: 'enderDragon', crop: [0, 0, 1254, 1254], points: 1400, css: 'ender-dragon' },
+    { name: 'カービィ', radius: 134, color: '#ff72b4', image: 'kirby', crop: [0, 0, 1254, 1254], points: 3200, css: 'kirby' },
+    { name: 'メタグロス', radius: 152, color: '#5f8fca', image: 'metagross', crop: [0, 0, 475, 475], points: 7000, css: 'metagross' }
   ];
 
   const canvas = document.getElementById('gameCanvas');
@@ -174,11 +174,11 @@
       .sort((a, b) => Number(Number.isFinite(b.fastest)) - Number(Number.isFinite(a.fastest)) || (Number.isFinite(a.fastest) && Number.isFinite(b.fastest) ? a.fastest - b.fastest : b.score - a.score))
       .slice(0, 7);
     els.leaderboard.replaceChildren();
-    if (els.leaderboardTitle) els.leaderboardTitle.textContent = `가족 최고 기록 · ${currentDifficulty().label}`;
+    if (els.leaderboardTitle) els.leaderboardTitle.textContent = `家族ベスト記録・${currentDifficulty().label}`;
     if (!rows.length) {
       const li = document.createElement('li');
       li.className = 'empty';
-      li.textContent = '첫 기록을 기다리고 있어요!';
+      li.textContent = '最初の記録を待っています！';
       els.leaderboard.append(li);
       return;
     }
@@ -189,7 +189,7 @@
       nameSpan.className = 'name';
       pointSpan.className = 'points';
       nameSpan.textContent = row.name;
-      pointSpan.textContent = `${row.score.toLocaleString()}점`;
+      pointSpan.textContent = `${row.score.toLocaleString()}点`;
       if (Number.isFinite(row.fastest)) {
         const small = document.createElement('small');
         small.textContent = `🏆 ${formatTime(row.fastest)}`;
@@ -222,15 +222,15 @@
     nextType = nextQueue[0] ?? 0;
     els.next.className = `avatar ${TYPES[nextQueue[0] ?? 0].css}`;
     els.next2.className = `avatar secondary-next ${TYPES[nextQueue[1] ?? 0].css}`;
-    els.next.setAttribute('aria-label', `다음 캐릭터: ${TYPES[nextQueue[0] ?? 0].name}`);
-    els.next2.setAttribute('aria-label', `그다음 캐릭터: ${TYPES[nextQueue[1] ?? 0].name}`);
+    els.next.setAttribute('aria-label', `次のキャラクター：${TYPES[nextQueue[0] ?? 0].name}`);
+    els.next2.setAttribute('aria-label', `その次のキャラクター：${TYPES[nextQueue[1] ?? 0].name}`);
     els.nextCard.classList.toggle('preview-one', difficulty.previewCount === 1);
     els.nextCard.classList.toggle('preview-none', difficulty.previewCount === 0);
     els.nextHelp.textContent = difficulty.previewCount === 2
-      ? '두 수 앞까지 보고 천천히 준비하세요.'
+      ? '2個先まで見ながらゆっくり準備できます。'
       : difficulty.previewCount === 1
-        ? '같은 얼굴끼리 만나면 합체해요.'
-        : '다음 캐릭터는 떨어질 때 공개됩니다.';
+        ? '同じキャラクターが触れると合体します。'
+        : '次のキャラクターは落とすときに分かります。';
   }
 
   function resetGame() {
@@ -256,7 +256,7 @@
   function beginFor(name) {
     const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked')?.value || difficultyKey;
     setDifficulty(selectedDifficulty);
-    playerName = name.trim().slice(0, 12) || '가족';
+    playerName = name.trim().slice(0, 12) || '家族';
     localStorage.setItem(LAST_PLAYER_KEY, playerName);
     els.player.textContent = playerName;
     els.startModal.classList.remove('visible');
@@ -404,7 +404,7 @@
         els.best.textContent = Math.max(score, personalBest(playerName)).toLocaleString();
         burst(x, y, TYPES[newType].color);
         tone(320 + newType * 120, .09, .08);
-        showMessage(`${TYPES[newType].name} 합체! +${gained}`);
+        showMessage(`${TYPES[newType].name}に合体！ +${gained}`);
         if (newType === TYPES.length - 1) clearReached = true;
         break;
       }
@@ -417,7 +417,7 @@
       finishing = true;
       running = false;
       canDrop = false;
-      showMessage('메타그로스 완성! 게임 클리어!');
+      showMessage('メタグロス完成！ゲームクリア！');
       const finalPiece = additions[additions.length - 1];
       if (finalPiece) {
         for (let i = 0; i < 5; i++) burst(finalPiece.x, finalPiece.y, ['#ffe268', '#76d94d', '#48a9ff', '#ff69aa', '#ffffff'][i]);
@@ -451,19 +451,19 @@
     const records = saveScore(playerName, score, elapsedMs, cleared);
     els.finalPlayer.textContent = playerName;
     els.finalScore.textContent = score.toLocaleString();
-    els.finalTime.textContent = `수행 시간 ${formatTime(elapsedMs)}`;
-    els.resultDifficulty.textContent = `${currentDifficulty().label} 난이도`;
+    els.finalTime.textContent = `プレイ時間 ${formatTime(elapsedMs)}`;
+    els.resultDifficulty.textContent = `難易度：${currentDifficulty().label}`;
     els.resultIcon.textContent = cleared ? '🏆' : '★';
-    els.resultEyebrow.textContent = cleared ? 'GAME CLEAR' : 'GAME OVER';
-    els.resultTitle.textContent = cleared ? '메타그로스 완성!' : '아슬아슬했어요!';
+    els.resultEyebrow.textContent = cleared ? 'ゲームクリア' : 'ゲームオーバー';
+    els.resultTitle.textContent = cleared ? 'メタグロス完成！' : 'おしかった！';
     if (records.timeRecord) {
-      els.recordMessage.textContent = '새로운 최단 클리어 기록이에요!';
+      els.recordMessage.textContent = 'クリア最速記録を更新しました！';
     } else if (records.scoreRecord) {
-      els.recordMessage.textContent = '새로운 개인 최고 점수예요!';
+      els.recordMessage.textContent = '自己ベストを更新しました！';
     } else if (cleared) {
-      els.recordMessage.textContent = `내 최단 기록 ${formatTime(personalFastestClear(playerName))}`;
+      els.recordMessage.textContent = `クリア最速記録 ${formatTime(personalFastestClear(playerName))}`;
     } else {
-      els.recordMessage.textContent = `개인 최고 ${personalBest(playerName).toLocaleString()}점`;
+      els.recordMessage.textContent = `自己ベスト ${personalBest(playerName).toLocaleString()}点`;
     }
     els.best.textContent = personalBest(playerName).toLocaleString();
     els.gameOverModal.classList.add('visible');
@@ -637,8 +637,8 @@
     };
     register({
       name: 'start_family_game',
-      title: '가족 게임 시작',
-      description: '지정한 플레이어 이름으로 새 가족 합체 게임을 시작합니다.',
+      title: '家族ゲームを開始',
+      description: '指定したプレイヤー名で新しい家族合体ゲームを開始します。',
       inputSchema: {
         type: 'object',
         properties: {
@@ -651,7 +651,7 @@
       annotations: { readOnlyHint: false, untrustedContentHint: true },
       execute(input) {
         const name = typeof input?.playerName === 'string' ? input.playerName.trim() : '';
-        if (!name || name.length > 12) throw new Error('플레이어 이름은 1~12자로 입력해 주세요.');
+        if (!name || name.length > 12) throw new Error('プレイヤー名は1～12文字で入力してください。');
         if (input?.difficulty) setDifficulty(input.difficulty);
         beginFor(name);
         return { status: 'started', playerName: name, difficulty: difficultyKey };
@@ -659,8 +659,8 @@
     });
     register({
       name: 'read_family_high_scores',
-      title: '가족 최고 기록 확인',
-      description: '이 기기에 저장된 가족별 최고 점수를 확인합니다.',
+      title: '家族ベスト記録を確認',
+      description: 'この端末に保存された家族ごとのベストスコアを確認します。',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute() {
@@ -724,7 +724,7 @@
     const name = els.playerInput.value.trim();
     if (!name) {
       els.playerInput.focus();
-      els.playerInput.setAttribute('placeholder', '먼저 이름을 입력해 주세요');
+      els.playerInput.setAttribute('placeholder', '先に名前を入力してください');
       return;
     }
     beginFor(name);
@@ -750,7 +750,7 @@
     els.playerInput.value = playerName || localStorage.getItem(LAST_PLAYER_KEY) || '';
   });
   els.clearScoresButton.addEventListener('click', () => {
-    if (confirm('이 기기에 저장된 가족 기록을 모두 지울까요?')) {
+    if (confirm('この端末に保存された家族の記録をすべて消しますか？')) {
       localStorage.removeItem(STORAGE_KEY);
       renderLeaderboard();
       els.best.textContent = '0';
@@ -759,7 +759,7 @@
   els.soundButton.addEventListener('click', () => {
     soundOn = !soundOn;
     els.soundButton.textContent = soundOn ? '♪' : '×';
-    els.soundButton.setAttribute('aria-label', soundOn ? '소리 끄기' : '소리 켜기');
+    els.soundButton.setAttribute('aria-label', soundOn ? '音を消す' : '音を出す');
     if (soundOn) tone(420, .06, .05);
   });
 

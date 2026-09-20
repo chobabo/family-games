@@ -11,7 +11,7 @@
   --blue: #48a9ff;
   --green: #76d94d;
   --shadow: 0 24px 80px rgba(0, 5, 18, .42);
-  font-family: ui-rounded, "SF Pro Rounded", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  font-family: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -97,8 +97,8 @@ button { cursor: pointer; }
   background: linear-gradient(120deg, rgba(255,255,255,.06), transparent 32%);
   z-index: 2;
 }
-canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: none; }
-.danger-label { position: absolute; top: 15.2%; right: 12px; z-index: 3; color: #ff92aa; font-size: .72rem; font-weight: 800; opacity: .9; pointer-events: none; }
+canvas { display: block; width: 100%; aspect-ratio: 430 / 572; touch-action: none; }
+.danger-label { position: absolute; top: 12.2%; right: 12px; z-index: 3; color: #ff92aa; font-size: .72rem; font-weight: 800; opacity: .9; pointer-events: none; }
 .game-message { position: absolute; left: 50%; top: 22%; transform: translate(-50%, -50%); z-index: 4; font-size: 1.15rem; font-weight: 900; color: var(--yellow); text-shadow: 0 2px 12px #000; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
 .game-message.show { opacity: 1; }
 .controls-hint { margin: 12px 0 0; text-align: center; color: var(--muted); font-size: .88rem; line-height: 1.55; }

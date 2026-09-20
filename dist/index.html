@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08182f">
-  <meta name="description" content="우리 가족 캐릭터와 엔더 드래곤, 커비, 메타그로스로 즐기는 합체 게임">
-  <title>우리 가족 합체 게임</title>
+  <meta name="description" content="家族のキャラクターとエンダードラゴン、カービィ、メタグロスで遊ぶ合体ゲーム">
+  <title>わが家の合体ゲーム</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23ffcc42'/%3E%3Ccircle cx='23' cy='27' r='4' fill='%2308182f'/%3E%3Ccircle cx='41' cy='27' r='4' fill='%2308182f'/%3E%3Cpath d='M20 39q12 12 24 0' fill='none' stroke='%2308182f' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
 </head>
@@ -13,87 +13,87 @@
   <main class="app-shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">CHO FAMILY GAME</p>
-        <h1>우리 가족 합체 게임</h1>
+        <p class="eyebrow">ファミリーゲーム</p>
+        <h1>わが家の合体ゲーム</h1>
       </div>
       <div class="top-actions">
-        <button class="icon-button" id="soundButton" type="button" aria-label="소리 끄기" title="소리 켜기/끄기">♪</button>
-        <button class="ghost-button" id="newGameButton" type="button">새 게임</button>
+        <button class="icon-button" id="soundButton" type="button" aria-label="音を消す" title="サウンド ON／OFF">♪</button>
+        <button class="ghost-button" id="newGameButton" type="button">新しいゲーム</button>
       </div>
     </header>
 
-    <section class="score-strip" aria-label="게임 점수">
+    <section class="score-strip" aria-label="ゲームスコア">
       <div class="score-cell player-cell">
-        <span>플레이어</span>
-        <div class="player-value"><strong id="playerDisplay">-</strong><em class="difficulty-badge normal" id="difficultyDisplay">보통</em></div>
+        <span>プレイヤー</span>
+        <div class="player-value"><strong id="playerDisplay">-</strong><em class="difficulty-badge normal" id="difficultyDisplay">ふつう</em></div>
       </div>
       <div class="score-cell">
-        <span>점수</span>
+        <span>スコア</span>
         <strong id="scoreDisplay">0</strong>
       </div>
       <div class="score-cell">
-        <span>내 최고</span>
+        <span>自己ベスト</span>
         <strong id="bestDisplay">0</strong>
       </div>
       <div class="score-cell">
-        <span>진행 시간</span>
+        <span>プレイ時間</span>
         <strong id="timeDisplay">00:00.0</strong>
       </div>
     </section>
 
     <div class="game-layout">
-      <section class="play-column" aria-label="게임 영역">
+      <section class="play-column" aria-label="ゲームエリア">
         <div class="game-frame">
-          <canvas id="gameCanvas" width="430" height="520" aria-label="가족 캐릭터 합체 게임판"></canvas>
-          <div class="danger-label" aria-hidden="true">여기까지 쌓이면 끝!</div>
+          <canvas id="gameCanvas" width="430" height="572" aria-label="家族キャラクター合体ゲーム盤"></canvas>
+          <div class="danger-label" aria-hidden="true">ここまで積み上がると終了！</div>
           <div class="game-message" id="gameMessage" aria-live="polite"></div>
         </div>
-        <p class="controls-hint"><strong>움직이기</strong> 마우스·손가락·← → &nbsp; <strong>놓기</strong> 클릭·탭·스페이스</p>
+        <p class="controls-hint"><strong>移動</strong> マウス・指・← → &nbsp; <strong>落とす</strong> クリック・タップ・スペース</p>
       </section>
 
       <aside class="side-panel">
         <section class="card next-card" id="nextCard">
           <div>
-            <p class="section-label">다음 캐릭터</p>
-            <p class="small-copy" id="nextHelp">같은 얼굴끼리 만나면 합체해요.</p>
+            <p class="section-label">次のキャラクター</p>
+            <p class="small-copy" id="nextHelp">同じキャラクターが触れると合体します。</p>
           </div>
           <div class="next-characters" id="nextCharacters">
-            <div class="avatar son" id="nextAvatar" role="img" aria-label="다음 캐릭터"></div>
-            <div class="avatar son secondary-next" id="nextAvatar2" role="img" aria-label="그다음 캐릭터"></div>
-            <div class="next-mystery" id="nextMystery" role="img" aria-label="다음 캐릭터 비공개">?</div>
+            <div class="avatar son" id="nextAvatar" role="img" aria-label="次のキャラクター"></div>
+            <div class="avatar son secondary-next" id="nextAvatar2" role="img" aria-label="その次のキャラクター"></div>
+            <div class="next-mystery" id="nextMystery" role="img" aria-label="次のキャラクターは非公開">?</div>
           </div>
         </section>
 
         <section class="card">
-          <p class="section-label">합체 순서</p>
-          <div class="merge-path" aria-label="막내, 둘째, 첫째, 엄마, 아빠, 할머니, 할아버지, 엔더 드래곤, 커비, 메타그로스 순서">
-            <div class="stage"><div class="avatar son"></div><span>막내</span></div>
+          <p class="section-label">合体の順番</p>
+          <div class="merge-path" aria-label="末っ子、次女、長女、お母さん、お父さん、おばあちゃん、おじいちゃん、エンダードラゴン、カービィ、メタグロスの順番">
+            <div class="stage"><div class="avatar son"></div><span>末っ子</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar second"></div><span>둘째</span></div>
+            <div class="stage"><div class="avatar second"></div><span>次女</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar first"></div><span>첫째</span></div>
+            <div class="stage"><div class="avatar first"></div><span>長女</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar wife"></div><span>엄마</span></div>
+            <div class="stage"><div class="avatar wife"></div><span>お母さん</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar dad"></div><span>아빠</span></div>
+            <div class="stage"><div class="avatar dad"></div><span>お父さん</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar grandma"></div><span>할머니</span></div>
+            <div class="stage"><div class="avatar grandma"></div><span>おばあちゃん</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar grandpa"></div><span>할아버지</span></div>
+            <div class="stage"><div class="avatar grandpa"></div><span>おじいちゃん</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar ender-dragon"></div><span>엔더<br>드래곤</span></div>
+            <div class="stage"><div class="avatar ender-dragon"></div><span>エンダー<br>ドラゴン</span></div>
             <span class="arrow">›</span>
-            <div class="stage"><div class="avatar kirby"></div><span>커비</span></div>
+            <div class="stage"><div class="avatar kirby"></div><span>カービィ</span></div>
             <span class="arrow">›</span>
-            <div class="stage goal"><div class="avatar metagross"></div><span>메타<br>그로스</span></div>
+            <div class="stage goal"><div class="avatar metagross"></div><span>メタ<br>グロス</span></div>
           </div>
-          <p class="goal-note">메타그로스를 완성하면 게임 클리어!</p>
+          <p class="goal-note">メタグロスを完成させるとゲームクリア！</p>
         </section>
 
         <section class="card leaderboard-card">
           <div class="card-heading">
-            <p class="section-label" id="leaderboardTitle">가족 최고 기록 · 보통</p>
-            <button class="text-button" id="clearScoresButton" type="button">기록 지우기</button>
+            <p class="section-label" id="leaderboardTitle">家族ベスト記録・ふつう</p>
+            <button class="text-button" id="clearScoresButton" type="button">記録を消す</button>
           </div>
           <ol class="leaderboard" id="leaderboard"></ol>
         </section>
@@ -112,54 +112,54 @@
         <span class="avatar second"></span>
         <span class="avatar son"></span>
       </div>
-      <p class="eyebrow">FAMILY CHALLENGE</p>
-      <h2 id="modalTitle">누가 도전할까요?</h2>
-      <p>이름을 고르거나 직접 입력하면 점수와 수행 시간이 저장됩니다.</p>
-      <div class="quick-names" aria-label="빠른 이름 선택">
-        <button type="button" data-name="아빠">아빠</button>
-        <button type="button" data-name="엄마">엄마</button>
-        <button type="button" data-name="첫째">첫째</button>
-        <button type="button" data-name="둘째">둘째</button>
-        <button type="button" data-name="막내">막내</button>
-        <button type="button" data-name="할머니">할머니</button>
-        <button type="button" data-name="할아버지">할아버지</button>
+      <p class="eyebrow">ファミリーチャレンジ</p>
+      <h2 id="modalTitle">だれが挑戦する？</h2>
+      <p>名前を選ぶか入力すると、スコアとプレイ時間が保存されます。</p>
+      <div class="quick-names" aria-label="名前を選ぶ">
+        <button type="button" data-name="お父さん">お父さん</button>
+        <button type="button" data-name="お母さん">お母さん</button>
+        <button type="button" data-name="長女">長女</button>
+        <button type="button" data-name="次女">次女</button>
+        <button type="button" data-name="末っ子">末っ子</button>
+        <button type="button" data-name="おばあちゃん">おばあちゃん</button>
+        <button type="button" data-name="おじいちゃん">おじいちゃん</button>
       </div>
       <label class="name-field">
-        <span>플레이어 이름</span>
-        <input id="playerNameInput" type="text" maxlength="12" autocomplete="off" placeholder="이름을 입력하세요">
+        <span>プレイヤー名</span>
+        <input id="playerNameInput" type="text" maxlength="12" autocomplete="off" placeholder="名前を入力してください">
       </label>
       <fieldset class="difficulty-picker">
-        <legend>난이도</legend>
+        <legend>難易度</legend>
         <label>
           <input type="radio" name="difficulty" value="easy">
-          <span><strong>쉬움</strong><small>작은 캐릭터 · 다음 2개</small></span>
+          <span><strong>かんたん</strong><small>小さめ・次の2個を表示</small></span>
         </label>
         <label>
           <input type="radio" name="difficulty" value="normal" checked>
-          <span><strong>보통</strong><small>기본 규칙 · 다음 1개</small></span>
+          <span><strong>ふつう</strong><small>基本ルール・次の1個</small></span>
         </label>
         <label>
           <input type="radio" name="difficulty" value="challenge">
-          <span><strong>도전</strong><small>큰 캐릭터 · 미리보기 없음</small></span>
+          <span><strong>チャレンジ</strong><small>大きめ・予告なし</small></span>
         </label>
       </fieldset>
-      <button class="primary-button" id="startButton" type="button">게임 시작</button>
-      <p class="privacy-note">버전 5 · 기록은 이 기기의 브라우저에만 저장됩니다.</p>
+      <button class="primary-button" id="startButton" type="button">ゲームスタート</button>
+      <p class="privacy-note">バージョン6・記録はこの端末のブラウザだけに保存されます。</p>
     </div>
   </div>
 
   <div class="modal-backdrop" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
     <div class="start-card compact">
       <div class="celebration" id="resultIcon" aria-hidden="true">★</div>
-      <p class="eyebrow" id="resultEyebrow">GAME OVER</p>
-      <h2 id="gameOverTitle">멋진 도전이었어요!</h2>
-      <p><strong id="finalPlayer">플레이어</strong>의 점수</p>
+      <p class="eyebrow" id="resultEyebrow">ゲームオーバー</p>
+      <h2 id="gameOverTitle">ナイスチャレンジ！</h2>
+      <p><strong id="finalPlayer">プレイヤー</strong>のスコア</p>
       <div class="final-score" id="finalScore">0</div>
       <div class="final-time" id="finalTime">00:00.0</div>
-      <div class="result-difficulty" id="resultDifficulty">보통 난이도</div>
+      <div class="result-difficulty" id="resultDifficulty">難易度：ふつう</div>
       <p class="record-message" id="recordMessage"></p>
-      <button class="primary-button" id="retryButton" type="button">한 번 더</button>
-      <button class="ghost-button full" id="changePlayerButton" type="button">다른 가족 도전</button>
+      <button class="primary-button" id="retryButton" type="button">もう一度</button>
+      <button class="ghost-button full" id="changePlayerButton" type="button">別の家族が挑戦</button>
     </div>
   </div>
 
