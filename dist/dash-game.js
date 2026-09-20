@@ -86,6 +86,8 @@
   let lastFrame = performance.now();
   let soundOn = true;
   let audioContext = null;
+  let lastGroundedAt = performance.now();
+  let jumpQueuedUntil = 0;
   const player = { y: GROUND_Y - PLAYER_SIZE, vy: 0 };
 
   function currentDifficulty() { return DIFFICULTIES[difficultyKey]; }
@@ -240,6 +242,8 @@
     player.vy = 0;
     rotation = 0;
     onGround = true;
+    lastGroundedAt = performance.now();
+    jumpQueuedUntil = 0;
     running = true;
     crashed = false;
     cleared = false;
@@ -280,6 +284,13 @@
     osc.stop(audioContext.currentTime + duration);
   }
 
+  function performJump() {
+    player.vy = -currentDifficulty().jump;
+    onGround = false;
+    jumpQueuedUntil = 0;
+    tone(420, .05, .035);
+  }
+
   function jumpOrRestart() {
     if (dashApp.hidden || els.startModal.classList.contains('visible') || els.resultModal.classList.contains('visible')) return;
     unlockAudio();
@@ -287,10 +298,13 @@
       beginAttempt(true);
       return;
     }
-    if (!running || !onGround) return;
-    player.vy = -currentDifficulty().jump;
-    onGround = false;
-    tone(420, .05, .035);
+    if (!running) return;
+    const now = performance.now();
+    if (onGround || now - lastGroundedAt <= 90) {
+      performJump();
+      return;
+    }
+    jumpQueuedUntil = now + 130;
   }
 
   function rectsOverlap(a, b) {
@@ -383,6 +397,15 @@
       }
       if (obstacle.type === 'block') {
         const blockRect = { x: screenX, y: obstacle.y, w: obstacle.w, h: obstacle.h };
+        const currentBottom = player.y + PLAYER_SIZE;
+        const horizontalOverlap = PLAYER_X + PLAYER_SIZE - 5 > screenX && PLAYER_X + 5 < screenX + obstacle.w;
+        const landingOnTop = horizontalOverlap && player.vy >= 0 && previousBottom <= obstacle.y + 4 && currentBottom >= obstacle.y - 4;
+        if (landingOnTop) {
+          player.y = obstacle.y - PLAYER_SIZE;
+          player.vy = 0;
+          onGround = true;
+          continue;
+        }
         if (!rectsOverlap(playerRect, blockRect)) continue;
         if (player.vy >= 0 && previousBottom <= obstacle.y + 9) {
           player.y = obstacle.y - PLAYER_SIZE;
@@ -400,6 +423,13 @@
           break;
         }
       }
+    }
+
+    if (onGround) {
+      lastGroundedAt = performance.now();
+      if (jumpQueuedUntil >= lastGroundedAt) performJump();
+    } else if (jumpQueuedUntil && jumpQueuedUntil < performance.now()) {
+      jumpQueuedUntil = 0;
     }
 
     if (!onGround) {
