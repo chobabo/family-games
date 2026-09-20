@@ -8,9 +8,9 @@
   const LAST_PLAYER_KEY = 'cho-family-merge-last-player';
   const LAST_DIFFICULTY_KEY = 'cho-family-merge-last-difficulty';
   const DIFFICULTIES = {
-    easy: { label: '쉬움', firstChance: .60, sizeScale: .92, grace: 3, showGuide: true, previewCount: 2, scoreMultiplier: .8 },
-    normal: { label: '보통', firstChance: .78, sizeScale: 1, grace: 1.7, showGuide: true, previewCount: 1, scoreMultiplier: 1 },
-    challenge: { label: '도전', firstChance: .90, sizeScale: 1.06, grace: 1, showGuide: false, previewCount: 0, scoreMultiplier: 1.5 }
+    easy: { label: '쉬움', spawnWeights: [.28, .35, .25, .12], sizeScale: .92, grace: 3, showGuide: true, previewCount: 2, scoreMultiplier: .8 },
+    normal: { label: '보통', spawnWeights: [.48, .32, .16, .04], sizeScale: 1, grace: 1.7, showGuide: true, previewCount: 1, scoreMultiplier: 1 },
+    challenge: { label: '도전', spawnWeights: [.74, .22, .04], sizeScale: 1.06, grace: 1, showGuide: false, previewCount: 0, scoreMultiplier: 1.5 }
   };
   const TYPES = [
     { name: '막내', radius: 25, color: '#76d94d', image: 'family', crop: [627, 627, 627, 627], points: 2, css: 'son' },
@@ -19,7 +19,10 @@
     { name: '엄마', radius: 57, color: '#ffbf32', image: 'family', crop: [0, 0, 627, 627], points: 40, css: 'wife' },
     { name: '아빠', radius: 70, color: '#168cff', image: 'dad', crop: [0, 0, 1254, 1254], points: 100, css: 'dad' },
     { name: '할머니', radius: 86, color: '#b255e7', image: 'grandparents', crop: [627, 215, 627, 627], points: 240, css: 'grandma' },
-    { name: '할아버지', radius: 104, color: '#f2a21a', image: 'grandparents', crop: [0, 215, 627, 627], points: 600, css: 'grandpa' }
+    { name: '할아버지', radius: 104, color: '#f2a21a', image: 'grandparents', crop: [0, 215, 627, 627], points: 600, css: 'grandpa' },
+    { name: '엔더 드래곤', radius: 118, color: '#9f55ff', image: 'enderDragon', crop: [0, 0, 1254, 1254], points: 1400, css: 'ender-dragon' },
+    { name: '커비', radius: 134, color: '#ff72b4', image: 'kirby', crop: [0, 0, 1254, 1254], points: 3200, css: 'kirby' },
+    { name: '메타그로스', radius: 152, color: '#5f8fca', image: 'metagross', crop: [0, 0, 475, 475], points: 7000, css: 'metagross' }
   ];
 
   const canvas = document.getElementById('gameCanvas');
@@ -27,11 +30,17 @@
   const imageBank = {
     family: new Image(),
     dad: new Image(),
-    grandparents: new Image()
+    grandparents: new Image(),
+    enderDragon: new Image(),
+    kirby: new Image(),
+    metagross: new Image()
   };
   imageBank.family.src = './assets/family-characters.png';
   imageBank.dad.src = './assets/dad-character.png';
   imageBank.grandparents.src = './assets/grandparents-characters.png';
+  imageBank.enderDragon.src = './assets/ender-dragon.png';
+  imageBank.kirby.src = './assets/kirby.png';
+  imageBank.metagross.src = './assets/metagross.png';
 
   const els = {
     player: document.getElementById('playerDisplay'),
@@ -199,7 +208,13 @@
   }
 
   function randomNext() {
-    return Math.random() < currentDifficulty().firstChance ? 0 : 1;
+    const weights = currentDifficulty().spawnWeights;
+    let value = Math.random();
+    for (let type = 0; type < weights.length; type++) {
+      value -= weights[type];
+      if (value <= 0) return type;
+    }
+    return weights.length - 1;
   }
 
   function updateNextAvatar() {
@@ -402,10 +417,10 @@
       finishing = true;
       running = false;
       canDrop = false;
-      showMessage('할아버지 완성! 게임 클리어!');
-      const grandpa = additions[additions.length - 1];
-      if (grandpa) {
-        for (let i = 0; i < 5; i++) burst(grandpa.x, grandpa.y, ['#ffe268', '#76d94d', '#48a9ff', '#ff69aa', '#ffffff'][i]);
+      showMessage('메타그로스 완성! 게임 클리어!');
+      const finalPiece = additions[additions.length - 1];
+      if (finalPiece) {
+        for (let i = 0; i < 5; i++) burst(finalPiece.x, finalPiece.y, ['#ffe268', '#76d94d', '#48a9ff', '#ff69aa', '#ffffff'][i]);
       }
       tone(880, .35, .11);
       window.setTimeout(() => finishGame(true), 900);
@@ -440,7 +455,7 @@
     els.resultDifficulty.textContent = `${currentDifficulty().label} 난이도`;
     els.resultIcon.textContent = cleared ? '🏆' : '★';
     els.resultEyebrow.textContent = cleared ? 'GAME CLEAR' : 'GAME OVER';
-    els.resultTitle.textContent = cleared ? '할아버지 완성!' : '아슬아슬했어요!';
+    els.resultTitle.textContent = cleared ? '메타그로스 완성!' : '아슬아슬했어요!';
     if (records.timeRecord) {
       els.recordMessage.textContent = '새로운 최단 클리어 기록이에요!';
     } else if (records.scoreRecord) {

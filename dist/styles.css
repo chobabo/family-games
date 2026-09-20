@@ -135,6 +135,16 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
 }
 .avatar.grandpa { background-position: 0 34%; }
 .avatar.grandma { background-position: 100% 34%; }
+.avatar.ender-dragon,
+.avatar.kirby,
+.avatar.metagross {
+  background-size: contain;
+  background-position: center;
+  background-color: rgba(255,255,255,.08);
+}
+.avatar.ender-dragon { background-image: url('./assets/ender-dragon.png'); }
+.avatar.kirby { background-image: url('./assets/kirby.png'); }
+.avatar.metagross { background-image: url('./assets/metagross.png'); }
 .next-card .avatar { width: 76px; height: 76px; }
 .next-card .secondary-next { width: 54px; height: 54px; margin-left: -12px; border: 3px solid #102b4e; }
 .next-mystery {
@@ -154,7 +164,7 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
 .next-card.preview-none .next-mystery { display: grid; }
 .merge-path {
   display: grid;
-  grid-template-columns: repeat(13, auto);
+  grid-template-columns: repeat(19, auto);
   align-items: center;
   justify-content: space-between;
   gap: 5px;
@@ -162,7 +172,7 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
   overflow-x: auto;
   padding: 2px 2px 8px;
 }
-.stage { min-width: 0; display: grid; justify-items: center; gap: 7px; color: var(--muted); font-size: .72rem; font-weight: 800; }
+.stage { min-width: 0; display: grid; justify-items: center; align-content: start; gap: 7px; color: var(--muted); font-size: .72rem; font-weight: 800; text-align: center; line-height: 1.15; }
 .stage .avatar { width: clamp(36px, 4vw, 48px); height: clamp(36px, 4vw, 48px); }
 .stage.goal { color: var(--yellow); }
 .stage.goal .avatar { box-shadow: 0 0 0 3px rgba(255,204,66,.32), 0 7px 18px rgba(0,0,0,.25); }
