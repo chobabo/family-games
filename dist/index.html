@@ -35,6 +35,10 @@
         <span>내 최고</span>
         <strong id="bestDisplay">0</strong>
       </div>
+      <div class="score-cell">
+        <span>진행 시간</span>
+        <strong id="timeDisplay">00:00.0</strong>
+      </div>
     </section>
 
     <div class="game-layout">
@@ -58,7 +62,7 @@
 
         <section class="card">
           <p class="section-label">합체 순서</p>
-          <div class="merge-path" aria-label="막내아들, 둘째딸, 첫째딸, 아내 순서">
+          <div class="merge-path" aria-label="막내, 둘째, 첫째, 엄마, 아빠, 할머니, 할아버지 순서">
             <div class="stage"><div class="avatar son"></div><span>막내</span></div>
             <span class="arrow">›</span>
             <div class="stage"><div class="avatar second"></div><span>둘째</span></div>
@@ -66,7 +70,14 @@
             <div class="stage"><div class="avatar first"></div><span>첫째</span></div>
             <span class="arrow">›</span>
             <div class="stage"><div class="avatar wife"></div><span>엄마</span></div>
+            <span class="arrow">›</span>
+            <div class="stage"><div class="avatar dad"></div><span>아빠</span></div>
+            <span class="arrow">›</span>
+            <div class="stage"><div class="avatar grandma"></div><span>할머니</span></div>
+            <span class="arrow">›</span>
+            <div class="stage goal"><div class="avatar grandpa"></div><span>할아버지</span></div>
           </div>
+          <p class="goal-note">할아버지를 완성하면 게임 클리어!</p>
         </section>
 
         <section class="card leaderboard-card">
@@ -83,6 +94,9 @@
   <div class="modal-backdrop visible" id="startModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="start-card">
       <div class="family-mark" aria-hidden="true">
+        <span class="avatar grandpa"></span>
+        <span class="avatar grandma"></span>
+        <span class="avatar dad"></span>
         <span class="avatar wife"></span>
         <span class="avatar first"></span>
         <span class="avatar second"></span>
@@ -90,13 +104,15 @@
       </div>
       <p class="eyebrow">FAMILY CHALLENGE</p>
       <h2 id="modalTitle">누가 도전할까요?</h2>
-      <p>이름을 고르거나 직접 입력하면 최고 기록이 저장됩니다.</p>
+      <p>이름을 고르거나 직접 입력하면 점수와 수행 시간이 저장됩니다.</p>
       <div class="quick-names" aria-label="빠른 이름 선택">
         <button type="button" data-name="아빠">아빠</button>
         <button type="button" data-name="엄마">엄마</button>
         <button type="button" data-name="첫째">첫째</button>
         <button type="button" data-name="둘째">둘째</button>
         <button type="button" data-name="막내">막내</button>
+        <button type="button" data-name="할머니">할머니</button>
+        <button type="button" data-name="할아버지">할아버지</button>
       </div>
       <label class="name-field">
         <span>플레이어 이름</span>
@@ -109,11 +125,12 @@
 
   <div class="modal-backdrop" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
     <div class="start-card compact">
-      <div class="celebration" aria-hidden="true">★</div>
-      <p class="eyebrow">GAME OVER</p>
+      <div class="celebration" id="resultIcon" aria-hidden="true">★</div>
+      <p class="eyebrow" id="resultEyebrow">GAME OVER</p>
       <h2 id="gameOverTitle">멋진 도전이었어요!</h2>
       <p><strong id="finalPlayer">플레이어</strong>의 점수</p>
       <div class="final-score" id="finalScore">0</div>
+      <div class="final-time" id="finalTime">00:00.0</div>
       <p class="record-message" id="recordMessage"></p>
       <button class="primary-button" id="retryButton" type="button">한 번 더</button>
       <button class="ghost-button full" id="changePlayerButton" type="button">다른 가족 도전</button>

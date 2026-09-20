@@ -7,21 +7,31 @@
   const STORAGE_KEY = 'cho-family-merge-scores-v1';
   const LAST_PLAYER_KEY = 'cho-family-merge-last-player';
   const TYPES = [
-    { name: '막내', radius: 29, color: '#76d94d', cropX: 1, cropY: 1, points: 2, css: 'son' },
-    { name: '둘째', radius: 43, color: '#ff69aa', cropX: 0, cropY: 1, points: 8, css: 'second' },
-    { name: '첫째', radius: 60, color: '#48a9ff', cropX: 1, cropY: 0, points: 24, css: 'first' },
-    { name: '엄마', radius: 82, color: '#ffbf32', cropX: 0, cropY: 0, points: 72, css: 'wife' }
+    { name: '막내', radius: 25, color: '#76d94d', image: 'family', crop: [627, 627, 627, 627], points: 2, css: 'son' },
+    { name: '둘째', radius: 34, color: '#ff69aa', image: 'family', crop: [0, 627, 627, 627], points: 6, css: 'second' },
+    { name: '첫째', radius: 45, color: '#48a9ff', image: 'family', crop: [627, 0, 627, 627], points: 16, css: 'first' },
+    { name: '엄마', radius: 57, color: '#ffbf32', image: 'family', crop: [0, 0, 627, 627], points: 40, css: 'wife' },
+    { name: '아빠', radius: 70, color: '#ff804f', image: 'dad', crop: [428, 260, 680, 680], points: 100, css: 'dad' },
+    { name: '할머니', radius: 86, color: '#b48cff', image: 'grandparents', crop: [948, 360, 470, 470], points: 240, css: 'grandma' },
+    { name: '할아버지', radius: 104, color: '#ffe268', image: 'grandparents', crop: [628, 330, 470, 470], points: 600, css: 'grandpa' }
   ];
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-  const familyImage = new Image();
-  familyImage.src = './assets/family-characters.png';
+  const imageBank = {
+    family: new Image(),
+    dad: new Image(),
+    grandparents: new Image()
+  };
+  imageBank.family.src = './assets/family-characters.png';
+  imageBank.dad.src = './assets/dad.jpg';
+  imageBank.grandparents.src = './assets/grandparents.jpg';
 
   const els = {
     player: document.getElementById('playerDisplay'),
     score: document.getElementById('scoreDisplay'),
     best: document.getElementById('bestDisplay'),
+    time: document.getElementById('timeDisplay'),
     leaderboard: document.getElementById('leaderboard'),
     next: document.getElementById('nextAvatar'),
     startModal: document.getElementById('startModal'),
@@ -35,6 +45,10 @@
     soundButton: document.getElementById('soundButton'),
     finalPlayer: document.getElementById('finalPlayer'),
     finalScore: document.getElementById('finalScore'),
+    finalTime: document.getElementById('finalTime'),
+    resultIcon: document.getElementById('resultIcon'),
+    resultEyebrow: document.getElementById('resultEyebrow'),
+    resultTitle: document.getElementById('gameOverTitle'),
     recordMessage: document.getElementById('recordMessage'),
     gameMessage: document.getElementById('gameMessage')
   };
@@ -48,7 +62,10 @@
   let canDrop = false;
   let running = false;
   let gameOver = false;
+  let finishing = false;
   let dangerTime = 0;
+  let gameStartedAt = 0;
+  let elapsedMs = 0;
   let lastTime = performance.now();
   let messageTimer = 0;
   let soundOn = true;
@@ -63,27 +80,49 @@
     }
   }
 
-  function saveScore(name, value) {
-    if (!name || value <= 0) return false;
+  function formatTime(ms) {
+    const safe = Math.max(0, Math.floor(ms));
+    const minutes = Math.floor(safe / 60000);
+    const seconds = Math.floor((safe % 60000) / 1000);
+    const tenths = Math.floor((safe % 1000) / 100);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
+  }
+
+  function saveScore(name, value, duration, cleared) {
+    if (!name || value <= 0) return { scoreRecord: false, timeRecord: false };
     const scores = loadScores();
     const oldBest = scores.filter(x => x.name === name).reduce((m, x) => Math.max(m, x.score), 0);
-    scores.push({ name, score: value, date: Date.now() });
-    scores.sort((a, b) => b.score - a.score || a.date - b.date);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores.slice(0, 30)));
+    const oldFastest = scores
+      .filter(x => x.name === name && x.cleared && Number.isFinite(x.elapsedMs))
+      .reduce((m, x) => Math.min(m, x.elapsedMs), Infinity);
+    scores.push({ name, score: value, elapsedMs: Math.floor(duration), cleared: !!cleared, date: Date.now() });
+    scores.sort((a, b) => Number(b.cleared) - Number(a.cleared) || (a.cleared && b.cleared ? a.elapsedMs - b.elapsedMs : b.score - a.score) || a.date - b.date);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores.slice(0, 50)));
     renderLeaderboard();
-    return value > oldBest;
+    return { scoreRecord: value > oldBest, timeRecord: !!cleared && duration < oldFastest };
   }
 
   function personalBest(name) {
     return loadScores().filter(x => x.name === name).reduce((m, x) => Math.max(m, x.score), 0);
   }
 
+  function personalFastestClear(name) {
+    return loadScores()
+      .filter(x => x.name === name && x.cleared && Number.isFinite(x.elapsedMs))
+      .reduce((m, x) => Math.min(m, x.elapsedMs), Infinity);
+  }
+
   function renderLeaderboard() {
     const bestByName = new Map();
     for (const item of loadScores()) {
-      bestByName.set(item.name, Math.max(bestByName.get(item.name) || 0, item.score));
+      const current = bestByName.get(item.name) || { name: item.name, score: 0, fastest: Infinity };
+      current.score = Math.max(current.score, item.score);
+      if (item.cleared && Number.isFinite(item.elapsedMs)) current.fastest = Math.min(current.fastest, item.elapsedMs);
+      bestByName.set(item.name, current);
     }
-    const rows = [...bestByName.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const rows = [...bestByName.values()]
+      .sort((a, b) => Number(Number.isFinite(b.fastest)) - Number(Number.isFinite(a.fastest)) || (Number.isFinite(a.fastest) && Number.isFinite(b.fastest) ? a.fastest - b.fastest : b.score - a.score))
+      .slice(0, 7);
     els.leaderboard.replaceChildren();
     if (!rows.length) {
       const li = document.createElement('li');
@@ -92,14 +131,19 @@
       els.leaderboard.append(li);
       return;
     }
-    rows.forEach(([name, points]) => {
+    rows.forEach(row => {
       const li = document.createElement('li');
       const nameSpan = document.createElement('span');
       const pointSpan = document.createElement('span');
       nameSpan.className = 'name';
       pointSpan.className = 'points';
-      nameSpan.textContent = name;
-      pointSpan.textContent = points.toLocaleString();
+      nameSpan.textContent = row.name;
+      pointSpan.textContent = `${row.score.toLocaleString()}점`;
+      if (Number.isFinite(row.fastest)) {
+        const small = document.createElement('small');
+        small.textContent = `🏆 ${formatTime(row.fastest)}`;
+        pointSpan.append(small);
+      }
       li.append(nameSpan, pointSpan);
       els.leaderboard.append(li);
     });
@@ -127,11 +171,15 @@
     score = 0;
     dangerTime = 0;
     gameOver = false;
+    finishing = false;
     running = true;
     canDrop = true;
+    gameStartedAt = performance.now();
+    elapsedMs = 0;
     dropX = W / 2;
     nextType = randomNext();
     els.score.textContent = '0';
+    els.time.textContent = formatTime(0);
     els.best.textContent = personalBest(playerName).toLocaleString();
     updateNextAvatar();
   }
@@ -169,6 +217,8 @@
 
   function update(dt) {
     if (!running || gameOver) return;
+    elapsedMs = performance.now() - gameStartedAt;
+    els.time.textContent = formatTime(elapsedMs);
     const steps = 3;
     const step = dt / steps;
     for (let s = 0; s < steps; s++) {
@@ -203,6 +253,7 @@
         }
       }
       mergeTouching();
+      if (finishing) return;
     }
 
     for (const part of particles) {
@@ -250,6 +301,7 @@
   function mergeTouching() {
     const used = new Set();
     const additions = [];
+    let clearReached = false;
     for (let i = 0; i < pieces.length; i++) {
       if (used.has(i)) continue;
       for (let j = i + 1; j < pieces.length; j++) {
@@ -279,10 +331,26 @@
         burst(x, y, TYPES[newType].color);
         tone(320 + newType * 120, .09, .08);
         showMessage(`${TYPES[newType].name} 합체! +${TYPES[newType].points}`);
+        if (newType === TYPES.length - 1) clearReached = true;
         break;
       }
+      if (clearReached) break;
     }
     if (used.size) pieces = pieces.filter((_, i) => !used.has(i)).concat(additions);
+    if (clearReached && !finishing) {
+      elapsedMs = performance.now() - gameStartedAt;
+      els.time.textContent = formatTime(elapsedMs);
+      finishing = true;
+      running = false;
+      canDrop = false;
+      showMessage('할아버지 완성! 게임 클리어!');
+      const grandpa = additions[additions.length - 1];
+      if (grandpa) {
+        for (let i = 0; i < 5; i++) burst(grandpa.x, grandpa.y, ['#ffe268', '#76d94d', '#48a9ff', '#ff69aa', '#ffffff'][i]);
+      }
+      tone(880, .35, .11);
+      window.setTimeout(() => finishGame(true), 900);
+    }
   }
 
   function burst(x, y, color) {
@@ -300,17 +368,31 @@
     messageTimer = setTimeout(() => els.gameMessage.classList.remove('show'), 680);
   }
 
-  function finishGame() {
+  function finishGame(cleared = false) {
     if (gameOver) return;
     gameOver = true;
     running = false;
-    const isRecord = saveScore(playerName, score);
+    finishing = false;
+    elapsedMs = elapsedMs || performance.now() - gameStartedAt;
+    const records = saveScore(playerName, score, elapsedMs, cleared);
     els.finalPlayer.textContent = playerName;
     els.finalScore.textContent = score.toLocaleString();
-    els.recordMessage.textContent = isRecord ? '새로운 개인 최고 기록이에요! ★' : `개인 최고 ${personalBest(playerName).toLocaleString()}점`;
+    els.finalTime.textContent = `수행 시간 ${formatTime(elapsedMs)}`;
+    els.resultIcon.textContent = cleared ? '🏆' : '★';
+    els.resultEyebrow.textContent = cleared ? 'GAME CLEAR' : 'GAME OVER';
+    els.resultTitle.textContent = cleared ? '할아버지 완성!' : '아슬아슬했어요!';
+    if (records.timeRecord) {
+      els.recordMessage.textContent = '새로운 최단 클리어 기록이에요!';
+    } else if (records.scoreRecord) {
+      els.recordMessage.textContent = '새로운 개인 최고 점수예요!';
+    } else if (cleared) {
+      els.recordMessage.textContent = `내 최단 기록 ${formatTime(personalFastestClear(playerName))}`;
+    } else {
+      els.recordMessage.textContent = `개인 최고 ${personalBest(playerName).toLocaleString()}점`;
+    }
     els.best.textContent = personalBest(playerName).toLocaleString();
     els.gameOverModal.classList.add('visible');
-    tone(180, .18, .09);
+    tone(cleared ? 740 : 180, cleared ? .28 : .18, .09);
   }
 
   function draw() {
@@ -401,10 +483,10 @@
     ctx.beginPath();
     ctx.arc(0, 0, r - 2, 0, Math.PI * 2);
     ctx.clip();
-    if (familyImage.complete && familyImage.naturalWidth) {
-      const halfW = familyImage.naturalWidth / 2;
-      const halfH = familyImage.naturalHeight / 2;
-      ctx.drawImage(familyImage, type.cropX * halfW, type.cropY * halfH, halfW, halfH, -r, -r, r * 2, r * 2);
+    const sourceImage = imageBank[type.image];
+    if (sourceImage?.complete && sourceImage.naturalWidth) {
+      const [sx, sy, sw, sh] = type.crop;
+      ctx.drawImage(sourceImage, sx, sy, sw, sh, -r, -r, r * 2, r * 2);
     } else {
       ctx.fillStyle = type.color;
       ctx.fillRect(-r, -r, r * 2, r * 2);
@@ -501,12 +583,18 @@
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute() {
         const bestByName = new Map();
-        for (const item of loadScores()) bestByName.set(item.name, Math.max(bestByName.get(item.name) || 0, item.score));
+        for (const item of loadScores()) {
+          const current = bestByName.get(item.name) || { name: item.name, points: 0, fastestClearMs: null };
+          current.points = Math.max(current.points, item.score);
+          if (item.cleared && Number.isFinite(item.elapsedMs)) {
+            current.fastestClearMs = current.fastestClearMs === null ? item.elapsedMs : Math.min(current.fastestClearMs, item.elapsedMs);
+          }
+          bestByName.set(item.name, current);
+        }
         return {
-          scores: [...bestByName.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([name, points]) => ({ name, points }))
+          scores: [...bestByName.values()]
+            .sort((a, b) => b.points - a.points)
+            .slice(0, 7)
         };
       }
     });
@@ -562,7 +650,10 @@
     els.playerInput.focus();
   });
   els.newGameButton.addEventListener('click', () => {
-    if (running && score > 0) saveScore(playerName, score);
+    if (running && score > 0) {
+      elapsedMs = performance.now() - gameStartedAt;
+      saveScore(playerName, score, elapsedMs, false);
+    }
     running = false;
     gameOver = false;
     els.gameOverModal.classList.remove('visible');
@@ -584,7 +675,7 @@
   });
 
   window.addEventListener('resize', setCanvasResolution);
-  familyImage.addEventListener('load', draw);
+  Object.values(imageBank).forEach(img => img.addEventListener('load', draw));
   els.playerInput.value = localStorage.getItem(LAST_PLAYER_KEY) || '';
   renderLeaderboard();
   setCanvasResolution();

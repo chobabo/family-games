@@ -51,7 +51,7 @@ button { cursor: pointer; }
 
 .score-strip {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1.35fr 1fr 1fr 1.15fr;
   border: 1px solid var(--line);
   border-radius: 20px;
   background: rgba(5, 18, 37, .66);
@@ -109,11 +109,35 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 650; touch-action: non
 .avatar.first { background-position: 100% 0; }
 .avatar.second { background-position: 0 100%; }
 .avatar.son { background-position: 100% 100%; }
+.avatar.dad {
+  background-image: url('./assets/dad.jpg');
+  background-size: 250% auto;
+  background-position: 50% 24%;
+}
+.avatar.grandma,
+.avatar.grandpa {
+  background-image: url('./assets/grandparents.jpg');
+  background-size: 470% auto;
+}
+.avatar.grandpa { background-position: 39.5% 32%; }
+.avatar.grandma { background-position: 58.5% 35%; }
 .next-card .avatar { width: 76px; height: 76px; }
-.merge-path { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; align-items: center; margin-top: 16px; }
+.merge-path {
+  display: grid;
+  grid-template-columns: repeat(13, auto);
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin-top: 16px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+}
 .stage { min-width: 0; display: grid; justify-items: center; gap: 7px; color: var(--muted); font-size: .72rem; font-weight: 800; }
-.stage .avatar { width: clamp(42px, 5vw, 54px); height: clamp(42px, 5vw, 54px); }
+.stage .avatar { width: clamp(36px, 4vw, 48px); height: clamp(36px, 4vw, 48px); }
+.stage.goal { color: var(--yellow); }
+.stage.goal .avatar { box-shadow: 0 0 0 3px rgba(255,204,66,.32), 0 7px 18px rgba(0,0,0,.25); }
 .arrow { color: var(--yellow); font-size: 1.6rem; transform: translateY(-10px); }
+.goal-note { margin: 5px 0 0; text-align: center; color: var(--yellow); font-size: .78rem; font-weight: 850; }
 
 .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .text-button { border: 0; padding: 6px 8px; color: var(--muted); font-size: .75rem; }
@@ -122,6 +146,7 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 650; touch-action: non
 .leaderboard li::before { content: counter(rank); color: var(--yellow); font-size: .78rem; font-weight: 900; }
 .leaderboard .name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .leaderboard .points { font-weight: 900; }
+.leaderboard .points small { display: block; margin-top: 2px; color: var(--muted); font-size: .67rem; font-weight: 700; text-align: right; }
 .leaderboard .empty { display: block; color: var(--muted); text-align: center; padding: 18px 8px; }
 .leaderboard .empty::before { content: none; }
 
@@ -161,6 +186,7 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 650; touch-action: non
 .celebration { margin: 0 auto 10px; width: 72px; height: 72px; display: grid; place-items: center; border-radius: 50%; color: #8b5d00; background: var(--yellow); font-size: 2.2rem; box-shadow: 0 0 35px rgba(255,204,66,.28); }
 .final-score { margin: 8px 0; color: var(--yellow); font-size: 3.2rem; font-weight: 950; letter-spacing: -.05em; }
 .record-message { min-height: 24px; margin: 0 0 16px; color: #8fe776; font-weight: 800; }
+.final-time { margin: -2px 0 12px; color: var(--muted); font-size: 1.05rem; font-weight: 850; }
 
 @media (max-width: 820px) {
   .app-shell { width: min(100% - 20px, 590px); padding-top: 14px; }
@@ -175,14 +201,16 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 650; touch-action: non
   .topbar .eyebrow { display: none; }
   .topbar h1 { font-size: 1.38rem; }
   .ghost-button { padding: 0 12px; }
-  .score-strip { grid-template-columns: 1.3fr 1fr 1fr; border-radius: 16px; }
+  .score-strip { grid-template-columns: 1.3fr 1fr; border-radius: 16px; }
+  .score-cell:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+  .score-cell:nth-child(4) { border-top: 1px solid var(--line); }
   .score-cell { display: grid; padding: 10px; gap: 3px; }
   .score-cell strong { font-size: 1.05rem; }
   .game-frame { border-radius: 22px; }
   .controls-hint { font-size: .78rem; }
   .card { border-radius: 18px; padding: 15px; }
   .start-card { padding: 25px 20px; border-radius: 24px; }
-  .family-mark .avatar { width: 58px; height: 58px; }
+  .family-mark .avatar { width: 50px; height: 50px; margin-left: -15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
