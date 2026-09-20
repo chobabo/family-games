@@ -763,6 +763,26 @@
     if (soundOn) tone(420, .06, .05);
   });
 
+  window.FamilySuikaGame = {
+    open() {
+      running = false;
+      gameOver = false;
+      els.gameOverModal.classList.remove('visible');
+      els.playerInput.value = playerName || localStorage.getItem(LAST_PLAYER_KEY) || '';
+      els.startModal.classList.add('visible');
+    },
+    leave() {
+      if (running && score > 0) {
+        elapsedMs = performance.now() - gameStartedAt;
+        saveScore(playerName, score, elapsedMs, false);
+      }
+      running = false;
+      gameOver = false;
+      els.startModal.classList.remove('visible');
+      els.gameOverModal.classList.remove('visible');
+    }
+  };
+
   window.addEventListener('resize', setCanvasResolution);
   Object.values(imageBank).forEach(img => img.addEventListener('load', draw));
   els.playerInput.value = localStorage.getItem(LAST_PLAYER_KEY) || '';

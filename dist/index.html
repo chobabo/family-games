@@ -4,19 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08182f">
-  <meta name="description" content="家族のキャラクターとエンダードラゴン、カービィ、メタグロスで遊ぶ合体ゲーム">
-  <title>わが家の合体ゲーム</title>
+  <meta name="description" content="家族キャラクターで遊べる、合体ゲームとリズムジャンプゲーム">
+  <title>わが家のゲーム</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23ffcc42'/%3E%3Ccircle cx='23' cy='27' r='4' fill='%2308182f'/%3E%3Ccircle cx='41' cy='27' r='4' fill='%2308182f'/%3E%3Cpath d='M20 39q12 12 24 0' fill='none' stroke='%2308182f' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <main class="app-shell">
+  <main class="app-shell game-app" id="suikaApp" hidden>
     <header class="topbar">
       <div>
         <p class="eyebrow">ファミリーゲーム</p>
         <h1>わが家の合体ゲーム</h1>
       </div>
       <div class="top-actions">
+        <button class="ghost-button game-menu-button" type="button">ゲーム選択</button>
         <button class="icon-button" id="soundButton" type="button" aria-label="音を消す" title="サウンド ON／OFF">♪</button>
         <button class="ghost-button" id="newGameButton" type="button">新しいゲーム</button>
       </div>
@@ -101,7 +102,97 @@
     </div>
   </main>
 
-  <div class="modal-backdrop visible" id="startModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <main class="app-shell game-app dash-app" id="dashApp" hidden>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ファミリーダッシュ</p>
+        <h1>ファミリーダッシュ</h1>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-button game-menu-button" type="button">ゲーム選択</button>
+        <button class="icon-button" id="dashSoundButton" type="button" aria-label="音を消す" title="サウンド ON／OFF">♪</button>
+        <button class="ghost-button" id="dashNewGameButton" type="button">新しいゲーム</button>
+      </div>
+    </header>
+
+    <section class="score-strip dash-score-strip" aria-label="ファミリーダッシュの記録">
+      <div class="score-cell player-cell">
+        <span>プレイヤー</span>
+        <div class="player-value"><strong id="dashPlayerDisplay">-</strong><em class="difficulty-badge normal" id="dashDifficultyDisplay">ふつう</em></div>
+      </div>
+      <div class="score-cell">
+        <span>進行度</span>
+        <strong id="dashProgressDisplay">0%</strong>
+      </div>
+      <div class="score-cell">
+        <span>チャレンジ</span>
+        <strong id="dashAttemptDisplay">1回</strong>
+      </div>
+      <div class="score-cell">
+        <span>プレイ時間</span>
+        <strong id="dashTimeDisplay">00:00.0</strong>
+      </div>
+    </section>
+
+    <div class="dash-layout">
+      <section class="dash-play-column" aria-label="ファミリーダッシュのゲームエリア">
+        <div class="dash-frame">
+          <canvas id="dashCanvas" width="960" height="480" aria-label="ファミリーダッシュのステージ"></canvas>
+          <div class="dash-overlay" id="dashOverlay" aria-live="polite"></div>
+        </div>
+        <p class="controls-hint"><strong>ジャンプ</strong> クリック・タップ・スペース &nbsp; <strong>やり直す</strong> 失敗後にもう一度操作</p>
+      </section>
+
+      <aside class="dash-side-panel">
+        <section class="card dash-character-card">
+          <div class="dash-selected-avatar" id="dashSelectedAvatar" aria-hidden="true"><span class="avatar son"></span></div>
+          <div>
+            <p class="section-label" id="dashCharacterName">末っ子キューブ</p>
+            <p class="small-copy">ジャンプ中は90度ずつ回転します。</p>
+          </div>
+        </section>
+        <section class="card">
+          <p class="section-label">ステージの遊び方</p>
+          <ul class="dash-rules">
+            <li>自動で右へ進みます</li>
+            <li>トゲや壁に当たるとやり直し</li>
+            <li>ゴール到達で100%</li>
+          </ul>
+        </section>
+        <section class="card dash-record-card">
+          <p class="section-label">この難易度の記録</p>
+          <div class="dash-record-grid">
+            <span>ベスト進行度<strong id="dashBestProgress">0%</strong></span>
+            <span>最速クリア<strong id="dashBestTime">--:--.-</strong></span>
+          </div>
+          <button class="text-button" id="dashClearRecordsButton" type="button">ダッシュ記録を消す</button>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <div class="modal-backdrop visible" id="gameSelectModal" role="dialog" aria-modal="true" aria-labelledby="gameSelectTitle">
+    <div class="start-card game-select-card">
+      <p class="eyebrow">CHO FAMILY ARCADE</p>
+      <h2 id="gameSelectTitle">どのゲームで遊ぶ？</h2>
+      <p>好きなゲームを選んでください。</p>
+      <div class="game-choice-grid">
+        <button class="game-choice suika-choice" id="chooseSuikaButton" type="button">
+          <span class="choice-art" aria-hidden="true"><span class="avatar son"></span><span class="avatar second"></span><span class="avatar first"></span></span>
+          <strong>スイカ合体ゲーム</strong>
+          <small>同じキャラクターを合体させよう</small>
+        </button>
+        <button class="game-choice dash-choice" id="chooseDashButton" type="button">
+          <span class="dash-choice-cube" aria-hidden="true"><span class="avatar son"></span></span>
+          <strong>ファミリーダッシュ</strong>
+          <small>ジャンプでトゲを飛び越えよう</small>
+        </button>
+      </div>
+      <p class="privacy-note">バージョン7・記録はこの端末のブラウザだけに保存されます。</p>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="startModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="start-card">
       <div class="family-mark" aria-hidden="true">
         <span class="avatar grandpa"></span>
@@ -144,7 +235,7 @@
         </label>
       </fieldset>
       <button class="primary-button" id="startButton" type="button">ゲームスタート</button>
-      <p class="privacy-note">バージョン6・記録はこの端末のブラウザだけに保存されます。</p>
+      <p class="privacy-note">バージョン7・記録はこの端末のブラウザだけに保存されます。</p>
     </div>
   </div>
 
@@ -163,6 +254,72 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="dashStartModal" role="dialog" aria-modal="true" aria-labelledby="dashStartTitle">
+    <div class="start-card dash-start-card">
+      <p class="eyebrow">ファミリーダッシュ</p>
+      <h2 id="dashStartTitle">だれが走る？</h2>
+      <p>プレイヤー名、キューブ、難易度を選んでください。</p>
+      <div class="quick-names dash-quick-names" aria-label="名前を選ぶ">
+        <button type="button" data-dash-name="お父さん">お父さん</button>
+        <button type="button" data-dash-name="お母さん">お母さん</button>
+        <button type="button" data-dash-name="長女">長女</button>
+        <button type="button" data-dash-name="次女">次女</button>
+        <button type="button" data-dash-name="末っ子">末っ子</button>
+        <button type="button" data-dash-name="おばあちゃん">おばあちゃん</button>
+        <button type="button" data-dash-name="おじいちゃん">おじいちゃん</button>
+      </div>
+      <label class="name-field">
+        <span>プレイヤー名</span>
+        <input id="dashPlayerNameInput" type="text" maxlength="12" autocomplete="off" placeholder="名前を入力してください">
+      </label>
+      <fieldset class="dash-character-picker">
+        <legend>キューブを選ぶ</legend>
+        <label><input type="radio" name="dashCharacter" value="son" checked><span class="avatar son" title="末っ子"></span><small>末っ子</small></label>
+        <label><input type="radio" name="dashCharacter" value="second"><span class="avatar second" title="次女"></span><small>次女</small></label>
+        <label><input type="radio" name="dashCharacter" value="first"><span class="avatar first" title="長女"></span><small>長女</small></label>
+        <label><input type="radio" name="dashCharacter" value="wife"><span class="avatar wife" title="お母さん"></span><small>お母さん</small></label>
+        <label><input type="radio" name="dashCharacter" value="dad"><span class="avatar dad" title="お父さん"></span><small>お父さん</small></label>
+        <label><input type="radio" name="dashCharacter" value="grandma"><span class="avatar grandma" title="おばあちゃん"></span><small>祖母</small></label>
+        <label><input type="radio" name="dashCharacter" value="grandpa"><span class="avatar grandpa" title="おじいちゃん"></span><small>祖父</small></label>
+      </fieldset>
+      <fieldset class="difficulty-picker dash-difficulty-picker">
+        <legend>難易度</legend>
+        <label>
+          <input type="radio" name="dashDifficulty" value="easy">
+          <span><strong>かんたん</strong><small>ゆっくり・広い間隔</small></span>
+        </label>
+        <label>
+          <input type="radio" name="dashDifficulty" value="normal" checked>
+          <span><strong>ふつう</strong><small>標準スピード</small></span>
+        </label>
+        <label>
+          <input type="radio" name="dashDifficulty" value="challenge">
+          <span><strong>チャレンジ</strong><small>速い・連続障害物</small></span>
+        </label>
+      </fieldset>
+      <button class="primary-button" id="dashStartButton" type="button">ダッシュスタート</button>
+      <button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="dashResultModal" role="dialog" aria-modal="true" aria-labelledby="dashResultTitle">
+    <div class="start-card compact">
+      <div class="celebration" id="dashResultIcon" aria-hidden="true">🏁</div>
+      <p class="eyebrow" id="dashResultEyebrow">ステージクリア</p>
+      <h2 id="dashResultTitle">ゴール！</h2>
+      <p><strong id="dashFinalPlayer">プレイヤー</strong>の記録</p>
+      <div class="final-score dash-final-progress" id="dashFinalProgress">100%</div>
+      <div class="final-time" id="dashFinalTime">00:00.0</div>
+      <div class="result-difficulty" id="dashResultDifficulty">難易度：ふつう</div>
+      <p class="record-message" id="dashRecordMessage"></p>
+      <button class="primary-button" id="dashRetryButton" type="button">もう一度</button>
+      <button class="ghost-button full" id="dashChangePlayerButton" type="button">設定を変える</button>
+      <button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button>
+    </div>
+  </div>
+
   <script src="./game.js"></script>
+  <script src="./dash-game.js"></script>
+  <script src="./common.js"></script>
 </body>
 </html>
