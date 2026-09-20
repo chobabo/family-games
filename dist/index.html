@@ -121,6 +121,10 @@
         <div class="player-value"><strong id="dashPlayerDisplay">-</strong><em class="difficulty-badge normal" id="dashDifficultyDisplay">ふつう</em></div>
       </div>
       <div class="score-cell">
+        <span>ステージ</span>
+        <strong id="dashStageDisplay">1 / 2</strong>
+      </div>
+      <div class="score-cell">
         <span>進行度</span>
         <strong id="dashProgressDisplay">0%</strong>
       </div>
@@ -154,9 +158,9 @@
         <section class="card">
           <p class="section-label">ステージの遊び方</p>
           <ul class="dash-rules">
-            <li>自動で右へ進みます</li>
-            <li>トゲや壁に当たるとやり直し</li>
-            <li>ゴール到達で100%</li>
+            <li>ステージ1はトゲだけのコース</li>
+            <li>クリアするとステージ2へ進みます</li>
+            <li>ステージ2は青いブロックと黄色いジャンプ台</li>
           </ul>
         </section>
         <section class="card dash-record-card">
@@ -188,7 +192,7 @@
           <small>ジャンプでトゲを飛び越えよう</small>
         </button>
       </div>
-      <p class="privacy-note">バージョン8・記録はこの端末のブラウザだけに保存されます。</p>
+      <p class="privacy-note">バージョン9・記録はこの端末のブラウザだけに保存されます。</p>
     </div>
   </div>
 
@@ -235,7 +239,7 @@
         </label>
       </fieldset>
       <button class="primary-button" id="startButton" type="button">ゲームスタート</button>
-      <p class="privacy-note">バージョン8・記録はこの端末のブラウザだけに保存されます。</p>
+      <p class="privacy-note">バージョン9・記録はこの端末のブラウザだけに保存されます。</p>
     </div>
   </div>
 
@@ -258,7 +262,7 @@
     <div class="start-card dash-start-card">
       <p class="eyebrow">ファミリーダッシュ</p>
       <h2 id="dashStartTitle">だれが走る？</h2>
-      <p>プレイヤー名、キューブ、難易度を選んでください。</p>
+      <p>ステージ1はトゲだけ。クリアするとブロックコースへ進みます。</p>
       <div class="quick-names dash-quick-names" aria-label="名前を選ぶ">
         <button type="button" data-dash-name="お父さん">お父さん</button>
         <button type="button" data-dash-name="お母さん">お母さん</button>

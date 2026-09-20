@@ -17,6 +17,11 @@
     challenge: { label: 'チャレンジ', speed: 320, gravity: 2100, jump: 845, finish: 11000, color: '#ff69aa' }
   };
 
+  const STAGE_FINISH = {
+    1: { easy: 3400, normal: 4100, challenge: 4800 },
+    2: { easy: 5000, normal: 6200, challenge: 7400 }
+  };
+
   const CHARACTERS = {
     son: { name: '末っ子', color: '#76d94d', image: 'family', crop: [627, 627, 627, 627] },
     second: { name: '次女', color: '#ff69aa', image: 'family', crop: [0, 627, 627, 627] },
@@ -38,6 +43,7 @@
   const els = {
     player: document.getElementById('dashPlayerDisplay'),
     difficulty: document.getElementById('dashDifficultyDisplay'),
+    stage: document.getElementById('dashStageDisplay'),
     progress: document.getElementById('dashProgressDisplay'),
     attempt: document.getElementById('dashAttemptDisplay'),
     time: document.getElementById('dashTimeDisplay'),
@@ -68,6 +74,7 @@
   let playerName = '';
   let difficultyKey = 'normal';
   let characterKey = 'son';
+  let stage = 1;
   let obstacles = [];
   let particles = [];
   let distance = 0;
@@ -92,6 +99,12 @@
 
   function currentDifficulty() { return DIFFICULTIES[difficultyKey]; }
   function currentCharacter() { return CHARACTERS[characterKey]; }
+  function currentFinish() { return STAGE_FINISH[stage][difficultyKey]; }
+
+  function overallProgress() {
+    const stageProgress = Math.min(1, distance / currentFinish());
+    return stage === 1 ? Math.floor(stageProgress * 50) : 50 + Math.floor(stageProgress * 50);
+  }
 
   function formatTime(ms) {
     const safe = Math.max(0, Math.floor(ms));
@@ -167,18 +180,25 @@
 
   function buildLevel() {
     obstacles = [];
-    const sequences = {
-      easy: ['spike', 'block', 'spike', 'double', 'block', 'pad-wall', 'spike', 'steps'],
-      normal: ['spike', 'double', 'block-spike', 'tall', 'triple', 'steps', 'pad-wall', 'gate'],
-      challenge: ['double', 'block-spike', 'triple', 'tall', 'gate', 'steps', 'pad-wall', 'triple', 'gate']
+    const spikeSequences = {
+      easy: ['spike', 'spike', 'double', 'spike'],
+      normal: ['spike', 'double', 'spike', 'double', 'triple'],
+      challenge: ['double', 'spike', 'triple', 'double', 'triple']
     };
-    const gaps = { easy: 470, normal: 405, challenge: 350 };
-    const sequence = sequences[difficultyKey];
+    const advancedSequences = {
+      easy: ['block', 'spike', 'pad-wall', 'block-spike', 'steps'],
+      normal: ['block-spike', 'pad-wall', 'tall', 'gate', 'steps', 'pad-wall'],
+      challenge: ['pad-wall', 'block-spike', 'gate', 'steps', 'tall', 'pad-wall', 'gate']
+    };
+    const stageGaps = stage === 1
+      ? { easy: 480, normal: 420, challenge: 365 }
+      : { easy: 445, normal: 380, challenge: 325 };
+    const sequence = (stage === 1 ? spikeSequences : advancedSequences)[difficultyKey];
     let x = 720;
     let index = 0;
-    while (x < currentDifficulty().finish - 650) {
+    while (x < currentFinish() - 650) {
       addPattern(sequence[index % sequence.length], x);
-      x += gaps[difficultyKey] + (index % 3) * 28;
+      x += stageGaps[difficultyKey] + (index % 3) * 28;
       index += 1;
     }
   }
@@ -226,6 +246,7 @@
     els.player.textContent = playerName;
     els.startModal.classList.remove('visible');
     els.resultModal.classList.remove('visible');
+    stage = 1;
     attempt = 1;
     buildLevel();
     beginAttempt(false);
@@ -251,9 +272,12 @@
     beatTimer = 0;
     beatIndex = 0;
     els.attempt.textContent = `${attempt}回`;
+    els.stage.textContent = `${stage} / 2`;
     els.progress.textContent = '0%';
     els.time.textContent = formatTime(0);
-    els.overlay.textContent = attempt === 1 ? 'タップ・クリック・スペースでジャンプ！' : '';
+    els.overlay.textContent = attempt === 1
+      ? (stage === 1 ? 'ステージ1　トゲをジャンプ！' : 'ステージ2　ブロックコース！')
+      : '';
     els.overlay.className = attempt === 1 ? 'dash-overlay show' : 'dash-overlay';
     window.setTimeout(() => {
       if (running) els.overlay.classList.remove('show');
@@ -315,9 +339,10 @@
     if (!running) return;
     running = false;
     crashed = true;
-    const progress = Math.min(99, Math.floor(distance / currentDifficulty().finish * 100));
+    const progress = Math.min(99, overallProgress());
+    const stageProgress = Math.min(99, Math.floor(distance / currentFinish() * 100));
     saveRecord(progress);
-    els.overlay.textContent = `${progress}%　ミス！`;
+    els.overlay.textContent = `ステージ${stage}　${stageProgress}%　ミス！`;
     els.overlay.className = 'dash-overlay show crash';
     for (let i = 0; i < 18; i++) {
       const angle = Math.PI * 2 * i / 18;
@@ -341,23 +366,27 @@
     if (!running) return;
     running = false;
     cleared = true;
-    distance = currentDifficulty().finish;
+    distance = currentFinish();
     elapsedMs = performance.now() - attemptStartedAt;
-    const records = saveRecord(100, elapsedMs);
+    const firstStage = stage === 1;
+    const records = saveRecord(firstStage ? 50 : 100, firstStage ? null : elapsedMs);
     els.progress.textContent = '100%';
-    els.overlay.textContent = 'ゴール！';
+    els.overlay.textContent = firstStage ? 'ステージ1 クリア！' : '全ステージ クリア！';
     els.overlay.className = 'dash-overlay show clear';
     tone(660, .10, .06);
     window.setTimeout(() => tone(880, .18, .06), 120);
     resultTimer = window.setTimeout(() => {
       els.finalPlayer.textContent = playerName;
-      els.finalProgress.textContent = '100%';
+      els.finalProgress.textContent = firstStage ? 'ステージ1 クリア' : '100%';
       els.finalTime.textContent = `クリアタイム ${formatTime(elapsedMs)}・${attempt}回目`;
-      els.resultDifficulty.textContent = `難易度：${currentDifficulty().label}`;
-      els.resultIcon.textContent = '🏁';
-      els.resultEyebrow.textContent = 'ステージクリア';
-      els.resultTitle.textContent = 'ゴール！';
-      els.recordMessage.textContent = records.timeRecord ? '最速クリア記録を更新しました！' : 'ステージクリア、おめでとう！';
+      els.resultDifficulty.textContent = `難易度：${currentDifficulty().label}・ステージ${stage}`;
+      els.resultIcon.textContent = firstStage ? '⭐' : '🏁';
+      els.resultEyebrow.textContent = firstStage ? '次のステージへ' : '全ステージクリア';
+      els.resultTitle.textContent = firstStage ? 'ステージ1 クリア！' : 'ゴール！';
+      els.recordMessage.textContent = firstStage
+        ? '次は青いブロックと黄色いジャンプ台が登場します！'
+        : (records.timeRecord ? '最速クリア記録を更新しました！' : '全ステージクリア、おめでとう！');
+      els.retryButton.textContent = firstStage ? 'ステージ2へ' : 'ステージ1からもう一度';
       els.resultModal.classList.add('visible');
     }, 500);
   }
@@ -438,7 +467,7 @@
       rotation += (Math.round(rotation / (Math.PI / 2)) * (Math.PI / 2) - rotation) * Math.min(1, dt * 18);
     }
 
-    const progress = Math.min(100, Math.floor(distance / difficulty.finish * 100));
+    const progress = Math.min(100, Math.floor(distance / currentFinish() * 100));
     els.progress.textContent = `${progress}%`;
     els.time.textContent = formatTime(elapsedMs);
     beatTimer += dt;
@@ -447,7 +476,7 @@
       tone(beatIndex++ % 4 === 0 ? 190 : 140, .035, .012);
     }
     updateParticles(dt);
-    if (distance >= difficulty.finish) finishLevel();
+    if (distance >= currentFinish()) finishLevel();
   }
 
   function updateParticles(dt) {
@@ -495,7 +524,7 @@
       ctx.stroke();
     }
 
-    const progress = Math.min(1, distance / currentDifficulty().finish);
+    const progress = Math.min(1, distance / currentFinish());
     ctx.fillStyle = 'rgba(255,255,255,.12)';
     ctx.fillRect(24, 22, W - 48, 8);
     ctx.fillStyle = currentDifficulty().color;
@@ -643,23 +672,26 @@
   els.startButton.addEventListener('click', startGame);
   els.retryButton.addEventListener('click', () => {
     els.resultModal.classList.remove('visible');
+    stage = stage === 1 && cleared ? 2 : 1;
     attempt = 1;
     buildLevel();
     beginAttempt(false);
   });
   els.changePlayerButton.addEventListener('click', () => {
     els.resultModal.classList.remove('visible');
+    stage = 1;
     els.startModal.classList.add('visible');
   });
   els.newGameButton.addEventListener('click', () => {
     if (running) {
-      const progress = Math.min(99, Math.floor(distance / currentDifficulty().finish * 100));
+      const progress = Math.min(99, overallProgress());
       if (progress > 0) saveRecord(progress);
     }
     running = false;
     crashed = false;
     clearTimeout(restartTimer);
     clearTimeout(resultTimer);
+    stage = 1;
     els.resultModal.classList.remove('visible');
     els.startModal.classList.add('visible');
   });
@@ -704,11 +736,12 @@
     },
     leave() {
       if (running) {
-        const progress = Math.min(99, Math.floor(distance / currentDifficulty().finish * 100));
+        const progress = Math.min(99, overallProgress());
         if (progress > 0) saveRecord(progress);
       }
       running = false;
       crashed = false;
+      stage = 1;
       clearTimeout(restartTimer);
       clearTimeout(resultTimer);
       els.startModal.classList.remove('visible');

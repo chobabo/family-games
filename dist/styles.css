@@ -294,7 +294,7 @@ button { cursor: pointer; }
 .dash-choice-cube .avatar { width: 62px; height: 62px; border-radius: 10px; box-shadow: none; }
 
 .dash-app { width: min(1240px, calc(100% - 28px)); }
-.dash-score-strip { grid-template-columns: 1.3fr 1fr 1fr 1.2fr; }
+.dash-score-strip { grid-template-columns: 1.3fr .8fr 1fr 1fr 1.2fr; }
 .dash-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
 .dash-play-column { min-width: 0; }
 .dash-frame {
