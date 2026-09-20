@@ -2,8 +2,8 @@
   'use strict';
 
   const W = 430;
-  const H = 650;
-  const DANGER_Y = 102;
+  const H = 520;
+  const DANGER_Y = 86;
   const STORAGE_KEY = 'cho-family-merge-scores-v1';
   const LAST_PLAYER_KEY = 'cho-family-merge-last-player';
   const TYPES = [
@@ -11,9 +11,9 @@
     { name: '둘째', radius: 34, color: '#ff69aa', image: 'family', crop: [0, 627, 627, 627], points: 6, css: 'second' },
     { name: '첫째', radius: 45, color: '#48a9ff', image: 'family', crop: [627, 0, 627, 627], points: 16, css: 'first' },
     { name: '엄마', radius: 57, color: '#ffbf32', image: 'family', crop: [0, 0, 627, 627], points: 40, css: 'wife' },
-    { name: '아빠', radius: 70, color: '#ff804f', image: 'dad', crop: [428, 260, 680, 680], points: 100, css: 'dad' },
-    { name: '할머니', radius: 86, color: '#b48cff', image: 'grandparents', crop: [948, 360, 470, 470], points: 240, css: 'grandma' },
-    { name: '할아버지', radius: 104, color: '#ffe268', image: 'grandparents', crop: [628, 330, 470, 470], points: 600, css: 'grandpa' }
+    { name: '아빠', radius: 70, color: '#168cff', image: 'dad', crop: [0, 0, 1254, 1254], points: 100, css: 'dad' },
+    { name: '할머니', radius: 86, color: '#b255e7', image: 'grandparents', crop: [627, 215, 627, 627], points: 240, css: 'grandma' },
+    { name: '할아버지', radius: 104, color: '#f2a21a', image: 'grandparents', crop: [0, 215, 627, 627], points: 600, css: 'grandpa' }
   ];
 
   const canvas = document.getElementById('gameCanvas');
@@ -24,8 +24,8 @@
     grandparents: new Image()
   };
   imageBank.family.src = './assets/family-characters.png';
-  imageBank.dad.src = './assets/dad.jpg';
-  imageBank.grandparents.src = './assets/grandparents.jpg';
+  imageBank.dad.src = './assets/dad-character.png';
+  imageBank.grandparents.src = './assets/grandparents-characters.png';
 
   const els = {
     player: document.getElementById('playerDisplay'),

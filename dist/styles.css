@@ -69,7 +69,7 @@ button { cursor: pointer; }
 .play-column { min-width: 0; }
 .game-frame {
   position: relative;
-  width: min(100%, 560px);
+  width: min(100%, 430px);
   margin: 0 auto;
   border-radius: 30px;
   overflow: hidden;
@@ -84,8 +84,8 @@ button { cursor: pointer; }
   background: linear-gradient(120deg, rgba(255,255,255,.06), transparent 32%);
   z-index: 2;
 }
-canvas { display: block; width: 100%; aspect-ratio: 430 / 650; touch-action: none; }
-.danger-label { position: absolute; top: 15.1%; right: 12px; z-index: 3; color: #ff92aa; font-size: .72rem; font-weight: 800; opacity: .9; pointer-events: none; }
+canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: none; }
+.danger-label { position: absolute; top: 15.2%; right: 12px; z-index: 3; color: #ff92aa; font-size: .72rem; font-weight: 800; opacity: .9; pointer-events: none; }
 .game-message { position: absolute; left: 50%; top: 22%; transform: translate(-50%, -50%); z-index: 4; font-size: 1.15rem; font-weight: 900; color: var(--yellow); text-shadow: 0 2px 12px #000; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
 .game-message.show { opacity: 1; }
 .controls-hint { margin: 12px 0 0; text-align: center; color: var(--muted); font-size: .88rem; line-height: 1.55; }
@@ -110,17 +110,17 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 650; touch-action: non
 .avatar.second { background-position: 0 100%; }
 .avatar.son { background-position: 100% 100%; }
 .avatar.dad {
-  background-image: url('./assets/dad.jpg');
-  background-size: 250% auto;
-  background-position: 50% 24%;
+  background-image: url('./assets/dad-character.png');
+  background-size: 100% 100%;
+  background-position: center;
 }
 .avatar.grandma,
 .avatar.grandpa {
-  background-image: url('./assets/grandparents.jpg');
-  background-size: 470% auto;
+  background-image: url('./assets/grandparents-characters.png');
+  background-size: 200% 200%;
 }
-.avatar.grandpa { background-position: 39.5% 32%; }
-.avatar.grandma { background-position: 58.5% 35%; }
+.avatar.grandpa { background-position: 0 34%; }
+.avatar.grandma { background-position: 100% 34%; }
 .next-card .avatar { width: 76px; height: 76px; }
 .merge-path {
   display: grid;
@@ -192,7 +192,7 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 650; touch-action: non
   .app-shell { width: min(100% - 20px, 590px); padding-top: 14px; }
   .game-layout { grid-template-columns: 1fr; }
   .side-panel { grid-template-columns: 1fr; }
-  .game-frame { width: min(100%, 500px); }
+  .game-frame { width: min(100%, 430px); }
   .leaderboard-card { margin-bottom: env(safe-area-inset-bottom); }
 }
 
