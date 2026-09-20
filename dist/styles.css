@@ -64,6 +64,19 @@ button { cursor: pointer; }
 .score-cell span { color: var(--muted); font-size: .84rem; }
 .score-cell strong { font-size: 1.2rem; color: var(--yellow); }
 .player-cell strong { color: var(--ink); max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-value { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
+.difficulty-badge {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #07172c;
+  background: var(--yellow);
+  font-size: .68rem;
+  font-style: normal;
+  font-weight: 950;
+}
+.difficulty-badge.easy { background: #8fe776; }
+.difficulty-badge.challenge { color: #fff; background: #e85478; }
 
 .game-layout { display: grid; grid-template-columns: minmax(340px, 650px) minmax(300px, 1fr); gap: 20px; align-items: start; }
 .play-column { min-width: 0; }
@@ -94,6 +107,7 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
 .side-panel { display: grid; gap: 14px; }
 .card { border: 1px solid var(--line); border-radius: 22px; background: var(--panel); padding: 18px; box-shadow: 0 14px 38px rgba(0,0,0,.14); backdrop-filter: blur(15px); }
 .next-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.next-characters { position: relative; display: flex; align-items: center; justify-content: flex-end; min-width: 112px; }
 .section-label { margin: 0 0 5px; font-size: .95rem; font-weight: 900; }
 .small-copy { color: var(--muted); margin: 0; font-size: .82rem; line-height: 1.45; }
 .avatar {
@@ -122,6 +136,22 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
 .avatar.grandpa { background-position: 0 34%; }
 .avatar.grandma { background-position: 100% 34%; }
 .next-card .avatar { width: 76px; height: 76px; }
+.next-card .secondary-next { width: 54px; height: 54px; margin-left: -12px; border: 3px solid #102b4e; }
+.next-mystery {
+  display: none;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 2px dashed rgba(255,255,255,.34);
+  border-radius: 50%;
+  color: var(--yellow);
+  background: rgba(2,12,27,.38);
+  font-size: 2rem;
+  font-weight: 950;
+}
+.next-card.preview-one .secondary-next { display: none; }
+.next-card.preview-none .avatar { display: none; }
+.next-card.preview-none .next-mystery { display: grid; }
 .merge-path {
   display: grid;
   grid-template-columns: repeat(13, auto);
@@ -160,6 +190,8 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
 .modal-backdrop.visible { display: grid; }
 .start-card {
   width: min(440px, 100%);
+  max-height: calc(100svh - 24px);
+  overflow-y: auto;
   text-align: center;
   border: 1px solid rgba(194, 222, 255, .25);
   border-radius: 30px;
@@ -180,6 +212,32 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
 .name-field span { color: var(--muted); font-size: .8rem; font-weight: 700; }
 .name-field input { width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--line); background: rgba(2,12,27,.48); color: var(--ink); padding: 0 14px; outline: 0; font-size: 1rem; }
 .name-field input:focus { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(255,204,66,.15); }
+.difficulty-picker {
+  border: 0;
+  padding: 0;
+  margin: 14px 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  text-align: left;
+}
+.difficulty-picker legend { width: 100%; margin-bottom: 7px; color: var(--muted); font-size: .8rem; font-weight: 700; }
+.difficulty-picker label { min-width: 0; cursor: pointer; }
+.difficulty-picker input { position: absolute; opacity: 0; pointer-events: none; }
+.difficulty-picker label > span {
+  min-height: 72px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(2,12,27,.35);
+}
+.difficulty-picker strong { font-size: .91rem; }
+.difficulty-picker small { color: var(--muted); font-size: .66rem; line-height: 1.35; }
+.difficulty-picker input:checked + span { border-color: var(--yellow); background: rgba(255,204,66,.13); box-shadow: 0 0 0 2px rgba(255,204,66,.12); }
+.difficulty-picker input:focus-visible + span { outline: 3px solid rgba(72,169,255,.45); outline-offset: 2px; }
 .primary-button { width: 100%; min-height: 52px; border: 0; border-radius: 15px; color: #07172c; background: linear-gradient(135deg, #ffe06b, #ffb933); font-weight: 950; box-shadow: 0 10px 24px rgba(255, 184, 45, .18); }
 .primary-button:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .privacy-note { margin: 12px 0 0; color: #7890aa; font-size: .72rem; }
@@ -187,6 +245,7 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
 .final-score { margin: 8px 0; color: var(--yellow); font-size: 3.2rem; font-weight: 950; letter-spacing: -.05em; }
 .record-message { min-height: 24px; margin: 0 0 16px; color: #8fe776; font-weight: 800; }
 .final-time { margin: -2px 0 12px; color: var(--muted); font-size: 1.05rem; font-weight: 850; }
+.result-difficulty { width: max-content; margin: -4px auto 12px; padding: 5px 10px; border-radius: 999px; color: var(--yellow); background: rgba(255,204,66,.11); font-size: .76rem; font-weight: 900; }
 
 @media (max-width: 820px) {
   .app-shell { width: min(100% - 20px, 590px); padding-top: 14px; }
@@ -206,10 +265,12 @@ canvas { display: block; width: 100%; aspect-ratio: 430 / 520; touch-action: non
   .score-cell:nth-child(4) { border-top: 1px solid var(--line); }
   .score-cell { display: grid; padding: 10px; gap: 3px; }
   .score-cell strong { font-size: 1.05rem; }
+  .player-value { justify-content: flex-start; }
   .game-frame { border-radius: 22px; }
   .controls-hint { font-size: .78rem; }
   .card { border-radius: 18px; padding: 15px; }
   .start-card { padding: 25px 20px; border-radius: 24px; }
+  .difficulty-picker label > span { min-height: 66px; padding: 8px; }
   .family-mark .avatar { width: 50px; height: 50px; margin-left: -15px; }
 }
 

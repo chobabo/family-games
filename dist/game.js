@@ -6,6 +6,12 @@
   const DANGER_Y = 86;
   const STORAGE_KEY = 'cho-family-merge-scores-v1';
   const LAST_PLAYER_KEY = 'cho-family-merge-last-player';
+  const LAST_DIFFICULTY_KEY = 'cho-family-merge-last-difficulty';
+  const DIFFICULTIES = {
+    easy: { label: '쉬움', firstChance: .60, sizeScale: .92, grace: 3, showGuide: true, previewCount: 2, scoreMultiplier: .8 },
+    normal: { label: '보통', firstChance: .78, sizeScale: 1, grace: 1.7, showGuide: true, previewCount: 1, scoreMultiplier: 1 },
+    challenge: { label: '도전', firstChance: .90, sizeScale: 1.06, grace: 1, showGuide: false, previewCount: 0, scoreMultiplier: 1.5 }
+  };
   const TYPES = [
     { name: '막내', radius: 25, color: '#76d94d', image: 'family', crop: [627, 627, 627, 627], points: 2, css: 'son' },
     { name: '둘째', radius: 34, color: '#ff69aa', image: 'family', crop: [0, 627, 627, 627], points: 6, css: 'second' },
@@ -32,8 +38,14 @@
     score: document.getElementById('scoreDisplay'),
     best: document.getElementById('bestDisplay'),
     time: document.getElementById('timeDisplay'),
+    difficulty: document.getElementById('difficultyDisplay'),
     leaderboard: document.getElementById('leaderboard'),
+    leaderboardTitle: document.getElementById('leaderboardTitle'),
     next: document.getElementById('nextAvatar'),
+    next2: document.getElementById('nextAvatar2'),
+    nextCard: document.getElementById('nextCard'),
+    nextHelp: document.getElementById('nextHelp'),
+    nextMystery: document.getElementById('nextMystery'),
     startModal: document.getElementById('startModal'),
     gameOverModal: document.getElementById('gameOverModal'),
     playerInput: document.getElementById('playerNameInput'),
@@ -46,6 +58,7 @@
     finalPlayer: document.getElementById('finalPlayer'),
     finalScore: document.getElementById('finalScore'),
     finalTime: document.getElementById('finalTime'),
+    resultDifficulty: document.getElementById('resultDifficulty'),
     resultIcon: document.getElementById('resultIcon'),
     resultEyebrow: document.getElementById('resultEyebrow'),
     resultTitle: document.getElementById('gameOverTitle'),
@@ -58,6 +71,8 @@
   let playerName = '';
   let score = 0;
   let nextType = 0;
+  let nextQueue = [0, 0];
+  let difficultyKey = 'normal';
   let dropX = W / 2;
   let canDrop = false;
   let running = false;
@@ -70,6 +85,31 @@
   let messageTimer = 0;
   let soundOn = true;
   let audioContext = null;
+
+  function currentDifficulty() {
+    return DIFFICULTIES[difficultyKey];
+  }
+
+  function scoreDifficulty(item) {
+    return DIFFICULTIES[item?.difficulty] ? item.difficulty : 'normal';
+  }
+
+  function radiusFor(type) {
+    return TYPES[type].radius * currentDifficulty().sizeScale;
+  }
+
+  function setDifficulty(key, persist = true) {
+    difficultyKey = DIFFICULTIES[key] ? key : 'normal';
+    const difficulty = currentDifficulty();
+    if (persist) localStorage.setItem(LAST_DIFFICULTY_KEY, difficultyKey);
+    document.querySelectorAll('input[name="difficulty"]').forEach(input => {
+      input.checked = input.value === difficultyKey;
+    });
+    els.difficulty.textContent = difficulty.label;
+    els.difficulty.className = `difficulty-badge ${difficultyKey}`;
+    renderLeaderboard();
+    updateNextAvatar();
+  }
 
   function loadScores() {
     try {
@@ -91,11 +131,11 @@
   function saveScore(name, value, duration, cleared) {
     if (!name || value <= 0) return { scoreRecord: false, timeRecord: false };
     const scores = loadScores();
-    const oldBest = scores.filter(x => x.name === name).reduce((m, x) => Math.max(m, x.score), 0);
+    const oldBest = scores.filter(x => x.name === name && scoreDifficulty(x) === difficultyKey).reduce((m, x) => Math.max(m, x.score), 0);
     const oldFastest = scores
-      .filter(x => x.name === name && x.cleared && Number.isFinite(x.elapsedMs))
+      .filter(x => x.name === name && scoreDifficulty(x) === difficultyKey && x.cleared && Number.isFinite(x.elapsedMs))
       .reduce((m, x) => Math.min(m, x.elapsedMs), Infinity);
-    scores.push({ name, score: value, elapsedMs: Math.floor(duration), cleared: !!cleared, date: Date.now() });
+    scores.push({ name, score: value, elapsedMs: Math.floor(duration), cleared: !!cleared, difficulty: difficultyKey, date: Date.now() });
     scores.sort((a, b) => Number(b.cleared) - Number(a.cleared) || (a.cleared && b.cleared ? a.elapsedMs - b.elapsedMs : b.score - a.score) || a.date - b.date);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(scores.slice(0, 50)));
     renderLeaderboard();
@@ -103,18 +143,19 @@
   }
 
   function personalBest(name) {
-    return loadScores().filter(x => x.name === name).reduce((m, x) => Math.max(m, x.score), 0);
+    return loadScores().filter(x => x.name === name && scoreDifficulty(x) === difficultyKey).reduce((m, x) => Math.max(m, x.score), 0);
   }
 
   function personalFastestClear(name) {
     return loadScores()
-      .filter(x => x.name === name && x.cleared && Number.isFinite(x.elapsedMs))
+      .filter(x => x.name === name && scoreDifficulty(x) === difficultyKey && x.cleared && Number.isFinite(x.elapsedMs))
       .reduce((m, x) => Math.min(m, x.elapsedMs), Infinity);
   }
 
   function renderLeaderboard() {
     const bestByName = new Map();
     for (const item of loadScores()) {
+      if (scoreDifficulty(item) !== difficultyKey) continue;
       const current = bestByName.get(item.name) || { name: item.name, score: 0, fastest: Infinity };
       current.score = Math.max(current.score, item.score);
       if (item.cleared && Number.isFinite(item.elapsedMs)) current.fastest = Math.min(current.fastest, item.elapsedMs);
@@ -124,6 +165,7 @@
       .sort((a, b) => Number(Number.isFinite(b.fastest)) - Number(Number.isFinite(a.fastest)) || (Number.isFinite(a.fastest) && Number.isFinite(b.fastest) ? a.fastest - b.fastest : b.score - a.score))
       .slice(0, 7);
     els.leaderboard.replaceChildren();
+    if (els.leaderboardTitle) els.leaderboardTitle.textContent = `가족 최고 기록 · ${currentDifficulty().label}`;
     if (!rows.length) {
       const li = document.createElement('li');
       li.className = 'empty';
@@ -157,12 +199,23 @@
   }
 
   function randomNext() {
-    return Math.random() < 0.78 ? 0 : 1;
+    return Math.random() < currentDifficulty().firstChance ? 0 : 1;
   }
 
   function updateNextAvatar() {
-    els.next.className = `avatar ${TYPES[nextType].css}`;
-    els.next.setAttribute('aria-label', `다음 캐릭터: ${TYPES[nextType].name}`);
+    const difficulty = currentDifficulty();
+    nextType = nextQueue[0] ?? 0;
+    els.next.className = `avatar ${TYPES[nextQueue[0] ?? 0].css}`;
+    els.next2.className = `avatar secondary-next ${TYPES[nextQueue[1] ?? 0].css}`;
+    els.next.setAttribute('aria-label', `다음 캐릭터: ${TYPES[nextQueue[0] ?? 0].name}`);
+    els.next2.setAttribute('aria-label', `그다음 캐릭터: ${TYPES[nextQueue[1] ?? 0].name}`);
+    els.nextCard.classList.toggle('preview-one', difficulty.previewCount === 1);
+    els.nextCard.classList.toggle('preview-none', difficulty.previewCount === 0);
+    els.nextHelp.textContent = difficulty.previewCount === 2
+      ? '두 수 앞까지 보고 천천히 준비하세요.'
+      : difficulty.previewCount === 1
+        ? '같은 얼굴끼리 만나면 합체해요.'
+        : '다음 캐릭터는 떨어질 때 공개됩니다.';
   }
 
   function resetGame() {
@@ -177,7 +230,8 @@
     gameStartedAt = performance.now();
     elapsedMs = 0;
     dropX = W / 2;
-    nextType = randomNext();
+    nextQueue = [randomNext(), randomNext()];
+    nextType = nextQueue[0];
     els.score.textContent = '0';
     els.time.textContent = formatTime(0);
     els.best.textContent = personalBest(playerName).toLocaleString();
@@ -185,6 +239,8 @@
   }
 
   function beginFor(name) {
+    const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked')?.value || difficultyKey;
+    setDifficulty(selectedDifficulty);
     playerName = name.trim().slice(0, 12) || '가족';
     localStorage.setItem(LAST_PLAYER_KEY, playerName);
     els.player.textContent = playerName;
@@ -197,7 +253,7 @@
   function dropPiece() {
     if (!running || gameOver || !canDrop) return;
     const type = nextType;
-    const r = TYPES[type].radius;
+    const r = radiusFor(type);
     pieces.push({
       x: Math.max(r + 5, Math.min(W - r - 5, dropX)),
       y: 52,
@@ -209,7 +265,9 @@
       pulse: 1
     });
     canDrop = false;
-    nextType = randomNext();
+    nextQueue.shift();
+    nextQueue.push(randomNext());
+    nextType = nextQueue[0];
     updateNextAvatar();
     tone(230, .035, .045);
     window.setTimeout(() => { if (!gameOver) canDrop = true; }, 560);
@@ -266,7 +324,7 @@
 
     const danger = pieces.some(p => p.age > 1.7 && p.y - p.r < DANGER_Y && Math.hypot(p.vx, p.vy) < 90);
     dangerTime = danger ? dangerTime + dt : Math.max(0, dangerTime - dt * 2.2);
-    if (dangerTime > 1.7) finishGame();
+    if (dangerTime > currentDifficulty().grace) finishGame();
   }
 
   function resolveCollision(a, b) {
@@ -320,17 +378,18 @@
           x, y,
           vx: (a.vx + b.vx) * .24,
           vy: Math.min(-55, (a.vy + b.vy) * .15 - 45),
-          r: TYPES[newType].radius,
+          r: radiusFor(newType),
           type: newType,
           age: 0,
           pulse: 1
         });
-        score += TYPES[newType].points;
+        const gained = Math.max(1, Math.round(TYPES[newType].points * currentDifficulty().scoreMultiplier));
+        score += gained;
         els.score.textContent = score.toLocaleString();
         els.best.textContent = Math.max(score, personalBest(playerName)).toLocaleString();
         burst(x, y, TYPES[newType].color);
         tone(320 + newType * 120, .09, .08);
-        showMessage(`${TYPES[newType].name} 합체! +${TYPES[newType].points}`);
+        showMessage(`${TYPES[newType].name} 합체! +${gained}`);
         if (newType === TYPES.length - 1) clearReached = true;
         break;
       }
@@ -378,6 +437,7 @@
     els.finalPlayer.textContent = playerName;
     els.finalScore.textContent = score.toLocaleString();
     els.finalTime.textContent = `수행 시간 ${formatTime(elapsedMs)}`;
+    els.resultDifficulty.textContent = `${currentDifficulty().label} 난이도`;
     els.resultIcon.textContent = cleared ? '🏆' : '★';
     els.resultEyebrow.textContent = cleared ? 'GAME CLEAR' : 'GAME OVER';
     els.resultTitle.textContent = cleared ? '할아버지 완성!' : '아슬아슬했어요!';
@@ -446,16 +506,19 @@
 
   function drawDropGuide() {
     const type = TYPES[nextType];
-    const x = Math.max(type.radius + 5, Math.min(W - type.radius - 5, dropX));
+    const radius = radiusFor(nextType);
+    const x = Math.max(radius + 5, Math.min(W - radius - 5, dropX));
     ctx.save();
-    ctx.setLineDash([5, 8]);
-    ctx.strokeStyle = 'rgba(255,255,255,.20)';
-    ctx.beginPath();
-    ctx.moveTo(x, 62);
-    ctx.lineTo(x, H - 12);
-    ctx.stroke();
+    if (currentDifficulty().showGuide) {
+      ctx.setLineDash([5, 8]);
+      ctx.strokeStyle = 'rgba(255,255,255,.20)';
+      ctx.beginPath();
+      ctx.moveTo(x, 62);
+      ctx.lineTo(x, H - 12);
+      ctx.stroke();
+    }
     ctx.globalAlpha = canDrop ? .72 : .28;
-    drawCharacterCircle(x, 48, type.radius, nextType, 0);
+    drawCharacterCircle(x, 48, radius, nextType, 0);
     ctx.restore();
   }
 
@@ -563,7 +626,10 @@
       description: '지정한 플레이어 이름으로 새 가족 합체 게임을 시작합니다.',
       inputSchema: {
         type: 'object',
-        properties: { playerName: { type: 'string', minLength: 1, maxLength: 12 } },
+        properties: {
+          playerName: { type: 'string', minLength: 1, maxLength: 12 },
+          difficulty: { type: 'string', enum: ['easy', 'normal', 'challenge'] }
+        },
         required: ['playerName'],
         additionalProperties: false
       },
@@ -571,8 +637,9 @@
       execute(input) {
         const name = typeof input?.playerName === 'string' ? input.playerName.trim() : '';
         if (!name || name.length > 12) throw new Error('플레이어 이름은 1~12자로 입력해 주세요.');
+        if (input?.difficulty) setDifficulty(input.difficulty);
         beginFor(name);
-        return { status: 'started', playerName };
+        return { status: 'started', playerName: name, difficulty: difficultyKey };
       }
     });
     register({
@@ -584,12 +651,14 @@
       execute() {
         const bestByName = new Map();
         for (const item of loadScores()) {
-          const current = bestByName.get(item.name) || { name: item.name, points: 0, fastestClearMs: null };
+          const itemDifficulty = scoreDifficulty(item);
+          const key = `${itemDifficulty}\u0000${item.name}`;
+          const current = bestByName.get(key) || { name: item.name, difficulty: itemDifficulty, points: 0, fastestClearMs: null };
           current.points = Math.max(current.points, item.score);
           if (item.cleared && Number.isFinite(item.elapsedMs)) {
             current.fastestClearMs = current.fastestClearMs === null ? item.elapsedMs : Math.min(current.fastestClearMs, item.elapsedMs);
           }
-          bestByName.set(item.name, current);
+          bestByName.set(key, current);
         }
         return {
           scores: [...bestByName.values()]
@@ -630,6 +699,11 @@
   });
   els.playerInput.addEventListener('keydown', event => {
     if (event.key === 'Enter') els.startButton.click();
+  });
+  document.querySelectorAll('input[name="difficulty"]').forEach(input => {
+    input.addEventListener('change', () => {
+      if (input.checked) setDifficulty(input.value);
+    });
   });
   els.startButton.addEventListener('click', () => {
     const name = els.playerInput.value.trim();
@@ -677,7 +751,7 @@
   window.addEventListener('resize', setCanvasResolution);
   Object.values(imageBank).forEach(img => img.addEventListener('load', draw));
   els.playerInput.value = localStorage.getItem(LAST_PLAYER_KEY) || '';
-  renderLeaderboard();
+  setDifficulty(localStorage.getItem(LAST_DIFFICULTY_KEY) || 'normal', false);
   setCanvasResolution();
   updateNextAvatar();
   registerWebMcp();

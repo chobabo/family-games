@@ -25,7 +25,7 @@
     <section class="score-strip" aria-label="게임 점수">
       <div class="score-cell player-cell">
         <span>플레이어</span>
-        <strong id="playerDisplay">-</strong>
+        <div class="player-value"><strong id="playerDisplay">-</strong><em class="difficulty-badge normal" id="difficultyDisplay">보통</em></div>
       </div>
       <div class="score-cell">
         <span>점수</span>
@@ -52,12 +52,16 @@
       </section>
 
       <aside class="side-panel">
-        <section class="card next-card">
+        <section class="card next-card" id="nextCard">
           <div>
             <p class="section-label">다음 캐릭터</p>
-            <p class="small-copy">같은 얼굴끼리 만나면 합체해요.</p>
+            <p class="small-copy" id="nextHelp">같은 얼굴끼리 만나면 합체해요.</p>
           </div>
-          <div class="avatar son" id="nextAvatar" role="img" aria-label="다음 캐릭터"></div>
+          <div class="next-characters" id="nextCharacters">
+            <div class="avatar son" id="nextAvatar" role="img" aria-label="다음 캐릭터"></div>
+            <div class="avatar son secondary-next" id="nextAvatar2" role="img" aria-label="그다음 캐릭터"></div>
+            <div class="next-mystery" id="nextMystery" role="img" aria-label="다음 캐릭터 비공개">?</div>
+          </div>
         </section>
 
         <section class="card">
@@ -82,7 +86,7 @@
 
         <section class="card leaderboard-card">
           <div class="card-heading">
-            <p class="section-label">가족 최고 기록</p>
+            <p class="section-label" id="leaderboardTitle">가족 최고 기록 · 보통</p>
             <button class="text-button" id="clearScoresButton" type="button">기록 지우기</button>
           </div>
           <ol class="leaderboard" id="leaderboard"></ol>
@@ -118,8 +122,23 @@
         <span>플레이어 이름</span>
         <input id="playerNameInput" type="text" maxlength="12" autocomplete="off" placeholder="이름을 입력하세요">
       </label>
+      <fieldset class="difficulty-picker">
+        <legend>난이도</legend>
+        <label>
+          <input type="radio" name="difficulty" value="easy">
+          <span><strong>쉬움</strong><small>작은 캐릭터 · 다음 2개</small></span>
+        </label>
+        <label>
+          <input type="radio" name="difficulty" value="normal" checked>
+          <span><strong>보통</strong><small>기본 규칙 · 다음 1개</small></span>
+        </label>
+        <label>
+          <input type="radio" name="difficulty" value="challenge">
+          <span><strong>도전</strong><small>큰 캐릭터 · 미리보기 없음</small></span>
+        </label>
+      </fieldset>
       <button class="primary-button" id="startButton" type="button">게임 시작</button>
-      <p class="privacy-note">기록은 이 기기의 브라우저에만 저장됩니다.</p>
+      <p class="privacy-note">버전 4 · 기록은 이 기기의 브라우저에만 저장됩니다.</p>
     </div>
   </div>
 
@@ -131,6 +150,7 @@
       <p><strong id="finalPlayer">플레이어</strong>의 점수</p>
       <div class="final-score" id="finalScore">0</div>
       <div class="final-time" id="finalTime">00:00.0</div>
+      <div class="result-difficulty" id="resultDifficulty">보통 난이도</div>
       <p class="record-message" id="recordMessage"></p>
       <button class="primary-button" id="retryButton" type="button">한 번 더</button>
       <button class="ghost-button full" id="changePlayerButton" type="button">다른 가족 도전</button>
