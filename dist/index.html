@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08182f">
-  <meta name="description" content="家族キャラクターで遊べる、合体ゲームとリズムジャンプゲーム">
+  <meta name="description" content="家族キャラクターで遊べる、合体・ダッシュ・さんすうゲーム">
   <title>わが家のゲーム</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23ffcc42'/%3E%3Ccircle cx='23' cy='27' r='4' fill='%2308182f'/%3E%3Ccircle cx='41' cy='27' r='4' fill='%2308182f'/%3E%3Cpath d='M20 39q12 12 24 0' fill='none' stroke='%2308182f' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
@@ -102,6 +102,76 @@
     </div>
   </main>
 
+  <main class="app-shell game-app math-app" id="mathApp" hidden>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">パイプたんてい そうた</p>
+        <h1>そうたの パイプだいさくせん！</h1>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-button game-menu-button" type="button">ゲーム選択</button>
+        <button class="icon-button" id="mathSoundButton" type="button" aria-label="音を消す" title="サウンド ON／OFF">♪</button>
+        <button class="ghost-button" id="mathNewGameButton" type="button">新しいゲーム</button>
+      </div>
+    </header>
+
+    <section class="score-strip math-score-strip" aria-label="パイプたんていそうたの記録">
+      <div class="score-cell player-cell">
+        <span>プレイヤー</span>
+        <div class="player-value"><strong id="mathPlayerDisplay">-</strong><em class="difficulty-badge normal" id="mathDifficultyDisplay">ふつう</em></div>
+      </div>
+      <div class="score-cell"><span>ステージ</span><strong id="mathStageDisplay">1 / 3</strong></div>
+      <div class="score-cell"><span>のこり</span><strong id="mathQuestionDisplay">12 もん</strong></div>
+      <div class="score-cell"><span>スコア</span><strong id="mathScoreDisplay">0</strong></div>
+      <div class="score-cell"><span>じかん</span><strong id="mathTimeDisplay">00:00.0</strong></div>
+    </section>
+
+    <div class="math-layout">
+      <section class="math-play-column" aria-label="パイプたんていそうたのゲームエリア">
+        <div class="math-frame">
+          <canvas id="mathCanvas" width="960" height="540" aria-label="パイプを流れる問題に答えるさんすうゲーム"></canvas>
+          <div class="math-feedback" id="mathFeedback" aria-live="polite"></div>
+        </div>
+        <p class="controls-hint"><strong>こたえる</strong> 正しいバルブをクリック・タップ　または　キーボードの 1・2・3</p>
+      </section>
+
+      <aside class="math-side-panel">
+        <section class="card math-character-card">
+          <div class="math-selected-avatar" id="mathSelectedAvatar" aria-hidden="true"><span class="avatar son"></span></div>
+          <div>
+            <p class="section-label" id="mathCharacterName">末っ子と そうた</p>
+            <p class="small-copy" id="mathStageName">れんしゅうパイプ</p>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-heading">
+            <p class="section-label">パイプの つまり</p>
+            <strong class="math-streak" id="mathStreakDisplay">0 れんぞく</strong>
+          </div>
+          <div class="math-progress-track" id="mathProgressTrack" aria-label="問題の進み具合"></div>
+          <p class="small-copy math-tip" id="mathTip">もんだいが そこに とどくまえに バルブを ひらこう！</p>
+        </section>
+        <section class="card math-ranking-card">
+          <div class="card-heading">
+            <p class="section-label" id="mathRankingTitle">ランキング・ふつう</p>
+            <button class="text-button" id="mathClearRecordsButton" type="button">記録を消す</button>
+          </div>
+          <ol class="leaderboard math-leaderboard" id="mathLeaderboard"></ol>
+          <p class="ranking-rule">スコア順・同点ならタイム順</p>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <main class="app-shell game-app battle-app" id="battleApp" hidden>
+    <header class="topbar">
+      <div><p class="eyebrow">FAMILY BUBBLE BATTLE</p><h1>ファミリー バブルたいけつ！</h1></div>
+      <div class="top-actions"><button class="ghost-button game-menu-button" type="button">ゲーム選択</button><button class="ghost-button" id="battleNewGameButton" type="button">新しい対戦</button></div>
+    </header>
+    <section class="battle-score" aria-label="対戦状況"><div><span id="battleLeftName">プレイヤー 1</span><strong id="battleLeftChain">0 れんさ</strong></div><b id="battleTimer">00:00</b><div><span id="battleRightName">プレイヤー 2</span><strong id="battleRightChain">0 れんさ</strong></div></section>
+    <div class="battle-layout"><section class="battle-frame"><canvas id="battleCanvas" width="960" height="600" aria-label="2人用ファミリーバブル対戦"></canvas><div class="battle-message" id="battleMessage" aria-live="polite"></div></section><aside class="battle-side-panel"><section class="card"><p class="section-label">あそびかた</p><ul class="dash-rules"><li>同じ家族バブルを 4こ つなげよう</li><li>れんさで 相手に おじゃまバブル！</li><li>上まで つまったら まけ</li></ul></section><section class="card"><p class="section-label">そうさ</p><p class="small-copy"><b>左：</b>W A S D<br><b>右：</b>↑ ← ↓ →</p></section><section class="card"><p class="section-label">キャラクター勝利記録</p><ol class="leaderboard" id="battleLeaderboard"></ol></section></aside></div>
+  </main>
+
   <main class="app-shell game-app dash-app" id="dashApp" hidden>
     <header class="topbar">
       <div>
@@ -192,8 +262,17 @@
           <strong>ファミリーダッシュ</strong>
           <small>ジャンプでトゲを飛び越えよう</small>
         </button>
+        <button class="game-choice math-choice" id="chooseMathButton" type="button">
+          <span class="math-choice-art" aria-hidden="true"><span class="mini-poop">●</span><span class="math-choice-sign">3＋2</span><span class="mini-toilet">✓</span></span>
+          <strong>そうたの パイプだいさくせん！</strong>
+          <small>問題を解いて パイプを守ろう</small>
+        </button>
+        <button class="game-choice battle-choice" id="chooseBattleButton" type="button">
+          <span class="battle-choice-art" aria-hidden="true"><span class="avatar son"></span><span class="avatar second"></span><span class="avatar dad"></span></span>
+          <strong>ファミリー バブルたいけつ！</strong><small>家族バブルを 4こ つなげよう</small>
+        </button>
       </div>
-      <p class="privacy-note">バージョン10・記録はこの端末のブラウザだけに保存されます。</p>
+      <p class="privacy-note">バージョン12・記録はこの端末のブラウザだけに保存されます。</p>
     </div>
   </div>
 
@@ -240,7 +319,7 @@
         </label>
       </fieldset>
       <button class="primary-button" id="startButton" type="button">ゲームスタート</button>
-      <p class="privacy-note">バージョン10・記録はこの端末のブラウザだけに保存されます。</p>
+      <p class="privacy-note">バージョン11・記録はこの端末のブラウザだけに保存されます。</p>
     </div>
   </div>
 
@@ -323,8 +402,71 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="mathStartModal" role="dialog" aria-modal="true" aria-labelledby="mathStartTitle">
+    <div class="start-card math-start-card">
+      <div class="math-modal-mascot" aria-hidden="true">★</div>
+      <p class="eyebrow">パイプたんてい そうた</p>
+      <h2 id="mathStartTitle">だれと パイプを まもる？</h2>
+      <p>そうたと いっしょに、問題のつまりを かいけつしよう！</p>
+      <div class="quick-names math-quick-names" aria-label="名前を選ぶ">
+        <button type="button" data-math-name="お父さん">お父さん</button>
+        <button type="button" data-math-name="お母さん">お母さん</button>
+        <button type="button" data-math-name="長女">長女</button>
+        <button type="button" data-math-name="次女">次女</button>
+        <button type="button" data-math-name="末っ子">末っ子</button>
+        <button type="button" data-math-name="おばあちゃん">おばあちゃん</button>
+        <button type="button" data-math-name="おじいちゃん">おじいちゃん</button>
+      </div>
+      <label class="name-field">
+        <span>プレイヤー名</span>
+        <input id="mathPlayerNameInput" type="text" maxlength="12" autocomplete="off" placeholder="名前を入力してください">
+      </label>
+      <fieldset class="dash-character-picker math-character-picker">
+        <legend>そうたの パートナー</legend>
+        <label><input type="radio" name="mathCharacter" value="son" checked><span class="avatar son" title="末っ子"></span><small>末っ子</small></label>
+        <label><input type="radio" name="mathCharacter" value="second"><span class="avatar second" title="次女"></span><small>次女</small></label>
+        <label><input type="radio" name="mathCharacter" value="first"><span class="avatar first" title="長女"></span><small>長女</small></label>
+        <label><input type="radio" name="mathCharacter" value="wife"><span class="avatar wife" title="お母さん"></span><small>お母さん</small></label>
+        <label><input type="radio" name="mathCharacter" value="dad"><span class="avatar dad" title="お父さん"></span><small>お父さん</small></label>
+        <label><input type="radio" name="mathCharacter" value="grandma"><span class="avatar grandma" title="おばあちゃん"></span><small>祖母</small></label>
+        <label><input type="radio" name="mathCharacter" value="grandpa"><span class="avatar grandpa" title="おじいちゃん"></span><small>祖父</small></label>
+      </fieldset>
+      <fieldset class="difficulty-picker math-difficulty-picker">
+        <legend>レベルを えらぶ</legend>
+        <label><input type="radio" name="mathDifficulty" value="easy"><span><strong>レベル 1</strong><small>10まで・9.5びょう</small></span></label>
+        <label><input type="radio" name="mathDifficulty" value="normal" checked><span><strong>レベル 2</strong><small>20まで・6.9びょう</small></span></label>
+        <label><input type="radio" name="mathDifficulty" value="challenge"><span><strong>レベル 3</strong><small>20まで・4.9びょう</small></span></label>
+      </fieldset>
+      <button class="primary-button" id="mathStartButton" type="button">パイプ しゅつどう！</button>
+      <button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="battleStartModal" role="dialog" aria-modal="true" aria-labelledby="battleStartTitle">
+    <div class="start-card battle-start-card"><p class="eyebrow">FAMILY BUBBLE BATTLE</p><h2 id="battleStartTitle">だれと たいけつする？</h2><p>同じ家族バブルを 4こ つなげて、相手に おじゃまを送ろう！</p><div class="battle-pickers"><fieldset class="dash-character-picker"><legend>プレイヤー 1　W A S D</legend><label><input type="radio" name="battleLeft" value="son" checked><span class="avatar son"></span><small>末っ子</small></label><label><input type="radio" name="battleLeft" value="second"><span class="avatar second"></span><small>次女</small></label><label><input type="radio" name="battleLeft" value="first"><span class="avatar first"></span><small>長女</small></label><label><input type="radio" name="battleLeft" value="wife"><span class="avatar wife"></span><small>お母さん</small></label><label><input type="radio" name="battleLeft" value="dad"><span class="avatar dad"></span><small>お父さん</small></label></fieldset><fieldset class="dash-character-picker"><legend>プレイヤー 2　矢印キー</legend><label><input type="radio" name="battleRight" value="dad" checked><span class="avatar dad"></span><small>お父さん</small></label><label><input type="radio" name="battleRight" value="second"><span class="avatar second"></span><small>次女</small></label><label><input type="radio" name="battleRight" value="first"><span class="avatar first"></span><small>長女</small></label><label><input type="radio" name="battleRight" value="wife"><span class="avatar wife"></span><small>お母さん</small></label><label><input type="radio" name="battleRight" value="son"><span class="avatar son"></span><small>末っ子</small></label></fieldset></div><button class="primary-button" id="battleStartButton" type="button">たいけつ スタート！</button><button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button></div>
+  </div>
+  <div class="modal-backdrop" id="battleResultModal" role="dialog" aria-modal="true" aria-labelledby="battleResultTitle"><div class="start-card compact"><div class="celebration">★</div><p class="eyebrow">しょうり！</p><h2 id="battleResultTitle">プレイヤー 1 の勝ち！</h2><p id="battleResultText">ナイス バブルれんさ！</p><button class="primary-button" id="battleRetryButton" type="button">もう一度</button><button class="ghost-button full" id="battleChangeButton" type="button">キャラクターを変える</button><button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button></div></div>
+
+  <div class="modal-backdrop" id="mathResultModal" role="dialog" aria-modal="true" aria-labelledby="mathResultTitle">
+    <div class="start-card compact math-result-card">
+      <div class="math-result-mascot" aria-hidden="true">★</div>
+      <p class="eyebrow" id="mathResultEyebrow">だいせいこう！</p>
+      <h2 id="mathResultTitle">パイプを まもった！</h2>
+      <p><strong id="mathFinalPlayer">プレイヤー</strong>の きろく</p>
+      <div class="final-score" id="mathFinalScore">0</div>
+      <div class="final-time" id="mathFinalTime">00:00.0</div>
+      <div class="math-result-detail" id="mathResultDetail">12もん せいかい</div>
+      <p class="record-message" id="mathRecordMessage"></p>
+      <button class="primary-button" id="mathRetryButton" type="button">もう一度</button>
+      <button class="ghost-button full" id="mathChangePlayerButton" type="button">設定を変える</button>
+      <button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button>
+    </div>
+  </div>
+
   <script src="./game.js"></script>
   <script src="./dash-game.js"></script>
+  <script src="./math-game.js"></script>
+  <script src="./battle-game.js"></script>
   <script src="./common.js"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@ sleep 1
 open "http://127.0.0.1:${PORT}"
 
 echo ""
-echo "Family Games バージョン10を実行しています。"
+echo "Family Games バージョン12を実行しています。"
 echo "終了するには、この画面で Control + C を押してください。"
 echo ""
 
