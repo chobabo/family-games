@@ -1,11 +1,12 @@
 # Family Games
 
-家族で遊びながら少しずつ育てている、ブラウザ向けのミニゲーム集です。現在は次の4つのゲームを収録しています。
+家族で遊びながら少しずつ育てている、ブラウザ向けのミニゲーム集です。現在は次の5つのゲームを収録しています。
 
 - **スイカ合体ゲーム** — 同じ家族キャラクターを合体させ、最終キャラクターを目指します。
 - **ファミリーダッシュ** — 家族キューブを操作して、全5ステージの障害物コースを進みます。
 - **そうたのパイプだいさくせん！** — パイプ探偵そうたと家族を選び、流れてくる足し算・引き算の問題を解いて詰まりを防ぎます。
 - **ファミリー バブルたいけつ！** — 2人で家族バブルを操作し、4つ以上つないだ連鎖で対戦します。
+- **ファミリーブロック パズル** — 3つの家族ブロックを8×8ボードに置き、列をそろえて消すパズルです。
 
 ゲーム内の表示は日本語です。外部サーバーやデータベースは使用せず、記録はブラウザの `localStorage` に保存されます。
 
@@ -53,6 +54,12 @@ python3 -m http.server 8000 --directory dist
 - 同じ家族バブルを4つ以上つなぐと消え、連鎖すると相手におじゃまバブルを送れます。
 - 先に上まで詰まった側が負けになり、勝者のキャラクター別勝利記録が保存されます。
 
+### ファミリーブロック パズル
+
+- 右の3つのブロックから1つを選び、8×8ボードの置きたいマスをクリックします。
+- 横または縦の1列をそろえると消え、同時に複数列を消すとコンボになります。
+- どのブロックも置けなくなるとゲーム終了で、キャラクター別の最高スコアと最高コンボが保存されます。
+
 ## ファイル構成
 
 ```text
@@ -63,6 +70,7 @@ dist/
 ├── dash-game.js     # ファミリーダッシュ
 ├── math-game.js     # そうたのパイプだいさくせん
 ├── battle-game.js   # ファミリー バブルたいけつ
+├── block-game.js    # ファミリーブロック パズル
 ├── styles.css       # 共通デザイン
 └── assets/          # キャラクター画像
 ```
@@ -77,4 +85,4 @@ JavaScript、HTML、CSSなどのソースコードには [MIT License](LICENSE) 
 
 ## English
 
-Family Games is a browser-based collection containing a Suika-style merge game, a five-stage family-themed dash game, Sota's first-grade math pipe adventure, and a local two-player family bubble battle. Run it locally with `ゲーム実行.command` on macOS or serve the `dist` directory with Python. The MIT License applies to source code only; image assets are excluded.
+Family Games is a browser-based collection containing a Suika-style merge game, a five-stage family-themed dash game, Sota's first-grade math pipe adventure, a local two-player family bubble battle, and a family block puzzle. Run it locally with `ゲーム実行.command` on macOS or serve the `dist` directory with Python. The MIT License applies to source code only; image assets are excluded.

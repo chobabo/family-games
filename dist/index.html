@@ -163,6 +163,12 @@
     </div>
   </main>
 
+  <main class="app-shell game-app block-app" id="blockApp" hidden>
+    <header class="topbar"><div><p class="eyebrow">FAMILY BLOCK PUZZLE</p><h1>ファミリーブロック パズル</h1></div><div class="top-actions"><button class="ghost-button game-menu-button" type="button">ゲーム選択</button><button class="ghost-button" id="blockNewGameButton" type="button">新しいゲーム</button></div></header>
+    <section class="battle-score"><div><span id="blockPlayerName">末っ子</span><strong id="blockCombo">0 コンボ</strong></div><b>じっくり ならべよう</b><div><span>スコア</span><strong id="blockScore">0</strong></div></section>
+    <div class="block-layout"><section class="block-frame"><canvas id="blockCanvas" width="800" height="620" aria-label="家族ブロックパズル"></canvas><div class="block-message" id="blockMessage" aria-live="polite"></div></section><aside class="block-side-panel"><section class="card"><p class="section-label">あそびかた</p><p class="small-copy">下のブロックを選び、ボードのマスをクリック。横か縦の1列をそろえると消えます。</p></section><section class="card"><p class="section-label">このキャラクターの記録</p><div class="dash-record-grid"><span>ベストスコア<strong id="blockBestScore">0</strong></span><span>最高コンボ<strong id="blockBestCombo">0</strong></span></div></section></aside></div>
+  </main>
+
   <main class="app-shell game-app battle-app" id="battleApp" hidden>
     <header class="topbar">
       <div><p class="eyebrow">FAMILY BUBBLE BATTLE</p><h1>ファミリー バブルたいけつ！</h1></div>
@@ -271,8 +277,9 @@
           <span class="battle-choice-art" aria-hidden="true"><span class="avatar son"></span><span class="avatar second"></span><span class="avatar dad"></span></span>
           <strong>ファミリー バブルたいけつ！</strong><small>家族バブルを 4こ つなげよう</small>
         </button>
+        <button class="game-choice block-choice" id="chooseBlockButton" type="button"><span class="battle-choice-art" aria-hidden="true"><span class="avatar son"></span><span class="avatar wife"></span><span class="avatar dad"></span></span><strong>ファミリーブロック パズル</strong><small>ブロックをならべて 1列そろえよう</small></button>
       </div>
-      <p class="privacy-note">バージョン12・記録はこの端末のブラウザだけに保存されます。</p>
+      <p class="privacy-note">バージョン13・記録はこの端末のブラウザだけに保存されます。</p>
     </div>
   </div>
 
@@ -445,6 +452,8 @@
   <div class="modal-backdrop" id="battleStartModal" role="dialog" aria-modal="true" aria-labelledby="battleStartTitle">
     <div class="start-card battle-start-card"><p class="eyebrow">FAMILY BUBBLE BATTLE</p><h2 id="battleStartTitle">だれと たいけつする？</h2><p>同じ家族バブルを 4こ つなげて、相手に おじゃまを送ろう！</p><div class="battle-pickers"><fieldset class="dash-character-picker"><legend>プレイヤー 1　W A S D</legend><label><input type="radio" name="battleLeft" value="son" checked><span class="avatar son"></span><small>末っ子</small></label><label><input type="radio" name="battleLeft" value="second"><span class="avatar second"></span><small>次女</small></label><label><input type="radio" name="battleLeft" value="first"><span class="avatar first"></span><small>長女</small></label><label><input type="radio" name="battleLeft" value="wife"><span class="avatar wife"></span><small>お母さん</small></label><label><input type="radio" name="battleLeft" value="dad"><span class="avatar dad"></span><small>お父さん</small></label></fieldset><fieldset class="dash-character-picker"><legend>プレイヤー 2　矢印キー</legend><label><input type="radio" name="battleRight" value="dad" checked><span class="avatar dad"></span><small>お父さん</small></label><label><input type="radio" name="battleRight" value="second"><span class="avatar second"></span><small>次女</small></label><label><input type="radio" name="battleRight" value="first"><span class="avatar first"></span><small>長女</small></label><label><input type="radio" name="battleRight" value="wife"><span class="avatar wife"></span><small>お母さん</small></label><label><input type="radio" name="battleRight" value="son"><span class="avatar son"></span><small>末っ子</small></label></fieldset></div><button class="primary-button" id="battleStartButton" type="button">たいけつ スタート！</button><button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button></div>
   </div>
+  <div class="modal-backdrop" id="blockStartModal" role="dialog" aria-modal="true" aria-labelledby="blockStartTitle"><div class="start-card"><p class="eyebrow">FAMILY BLOCK PUZZLE</p><h2 id="blockStartTitle">だれの パズルにする？</h2><p>家族ブロックをならべて、ベストスコアを目指そう！</p><fieldset class="dash-character-picker"><legend>プレイヤーキャラクター</legend><label><input type="radio" name="blockCharacter" value="son" checked><span class="avatar son"></span><small>末っ子</small></label><label><input type="radio" name="blockCharacter" value="second"><span class="avatar second"></span><small>次女</small></label><label><input type="radio" name="blockCharacter" value="first"><span class="avatar first"></span><small>長女</small></label><label><input type="radio" name="blockCharacter" value="wife"><span class="avatar wife"></span><small>お母さん</small></label><label><input type="radio" name="blockCharacter" value="dad"><span class="avatar dad"></span><small>お父さん</small></label></fieldset><button class="primary-button" id="blockStartButton" type="button">パズル スタート！</button><button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button></div></div>
+  <div class="modal-backdrop" id="blockResultModal" role="dialog" aria-modal="true" aria-labelledby="blockResultTitle"><div class="start-card compact"><div class="celebration">★</div><p class="eyebrow">ゲームオーバー</p><h2 id="blockResultTitle">ナイス パズル！</h2><div class="final-score" id="blockFinalScore">0</div><p class="record-message" id="blockRecordMessage"></p><button class="primary-button" id="blockRetryButton" type="button">もう一度</button><button class="ghost-button full" id="blockChangeButton" type="button">キャラクターを変える</button></div></div>
   <div class="modal-backdrop" id="battleResultModal" role="dialog" aria-modal="true" aria-labelledby="battleResultTitle"><div class="start-card compact"><div class="celebration">★</div><p class="eyebrow">しょうり！</p><h2 id="battleResultTitle">プレイヤー 1 の勝ち！</h2><p id="battleResultText">ナイス バブルれんさ！</p><button class="primary-button" id="battleRetryButton" type="button">もう一度</button><button class="ghost-button full" id="battleChangeButton" type="button">キャラクターを変える</button><button class="ghost-button full game-menu-button" type="button">ゲーム選択に戻る</button></div></div>
 
   <div class="modal-backdrop" id="mathResultModal" role="dialog" aria-modal="true" aria-labelledby="mathResultTitle">
@@ -467,6 +476,7 @@
   <script src="./dash-game.js"></script>
   <script src="./math-game.js"></script>
   <script src="./battle-game.js"></script>
+  <script src="./block-game.js"></script>
   <script src="./common.js"></script>
 </body>
 </html>
